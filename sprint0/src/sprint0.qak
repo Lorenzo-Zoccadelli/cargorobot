@@ -1,5 +1,121 @@
 System cargorobot_system
 
+
+Context ctx_robot ip [host="localhost" port=8020]
+Context ctx_services ip [host="localhost" port=8021]
+
+Request	requestRegistration : registration
+Reply registrationDone : registration_done
+
+Request requestCargo : cargo_request 
+
+Dispatch putInSlot : put_in_slot 
+Dispatch positioned : positioned  
+Event alarm : alarm 
+
+ 
+
+
+QActor product_service context ctx_services {
+	State s0 initial{
+		// inizializza database? 
+	}
+	Goto wait_registration
+	
+	State wait_registration {
+		// che cosa fa? 	
+	}
+	Transition t0
+		whenMsg requestRegistration -> handle_registration 
+	
+	
+	State handle_registration{
+		// inserisce i dati del prodotto nel database 
+		// ritorna PID del prodotto 
+	}
+	Goto wait_registration
+} 
+
+QActor cargo_service context ctx_services {
+[#
+	const maxLoad = 100;
+	var currentWeight = 0;  
+	var currentPID = ""
+	
+	var slotOne = true; 
+	var slotTwo = true; 
+	var slotThree = true;  
+	var slotFour = true;  
+	
+#]
+
+	State s0 initial{
+		println("$name| active")
+	}
+	Goto waitRequest 
+	
+	State waitRequest {
+		println("$name| in attesa di richiesta")
+	}
+	Transition t0
+		whenRequest requestCargo -> checkRequest 
+		
+	State checkRequest{
+		[# var check #]
+	}
+	Goto waitRequest if[# #]else waitPositioning 
+	
+	State waitPositioning{
+		
+	}
+	
+	State putCargo{
+		
+	}
+	
+	State waitForRobot{
+		
+	} 
+	Transition t2 
+		whenMsg positioned -> waitForRequest 
+		
+	
+	State error{
+		// accendi led 
+	}
+} 
+
+QActor virtualrobot context ctx_robot {
+	State s0 initial{
+		
+	}
+	
+	State waitForCargo{
+		
+	}
+	Transition t0 
+		whenMsg putInSlot -> goIOPort 
+	
+	State goIOPort {
+		
+	}
+	Goto putInSlot 
+			
+	State putInSlot{
+		
+	}
+	
+	State backHome{
+		
+	}
+	Goto waitForCargo
+	
+	State alarm{
+		
+	}
+} 
+
+
 //entità: robot, cargoservice, productservice, sensore, stiva, prodotti, IOport, slot
 
 //REGISTRAZIONE PRODOTTI:
