@@ -1,2 +1,45 @@
 System cargorobot_system
 
+//entità: robot, cargoservice, productservice, sensore, stiva, prodotti, IOport, slot
+
+//REGISTRAZIONE PRODOTTI:
+//il prodotto deve essere registrato (peso e nome) in un database attraverso il servizio
+//dopo la registrazione il servizio ritorna un id univoco per il carico (PID>0)
+
+
+
+//CARGO SERVICE:
+//cargo service e productservice  sono la stessa cosa?
+/*
+ * Deve poter ricevere richieste di carico per prodotti già registrati
+ * Rigetta le richieste se: si eccederebbe il MaxLoad (parametro fisso? > 0 in kg) o sono occupati tutti e 4 gli slot
+ * Se accetta associa il PID allo slot e ritorna il nome dello slot
+ * 
+ * Aspetta che il prodotto venga messo sul sensore e nel mentre non serve altre richieste (le lascia in attesa o le scarta?)
+ * Il sensore rileva soltanto se è "arrivato" un carico appena registrato?
+ * 
+ * Deve poter sapere quando il robot ha finito di portare il carico nello slot
+ * 
+ * Una volta che il robot ha portato il prodotto nello slot può servire un'altra richiesta
+ * 
+ * 
+ * Deve offrire una web-gui aggiornata dinamicamente  che mostri lo stato degli slot
+ * 
+ * Se il sonar misura una distanza > DFREE per almeno 3s (si suppone un sonar failre), accende un led e blocca tutto
+ * Quando torna <= DFREE riprende tutto
+ * 
+ * 	//RILEVAZIONE SENSORE:
+ *	//il sensore è davanti all'IOport e rileva prodotto se a distanza < DFREE/2 per almeno 3s (DFREE parametro fisso?)
+ *	//rileva un prodotto arrivato all'IOPosrt (il sensore è parte di cargoservice?)
+ */
+ 
+ //ROBOT
+ /*
+  * aspettare che sia presente un prodotto sull'IOport
+  * posrtare il prodotto allo slot
+  * dire al cargoservice che ha fatto
+  * (il robot può già andare verso IOPort o deve prima tornare alla HOME per forza?)
+  * e tornare alla HOME
+  */
+
+ 
