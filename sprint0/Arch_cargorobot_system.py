@@ -25,4 +25,9 @@ with Diagram('cargorobot_systemArch', show=False, outformat='png', graph_attr=gr
   with Cluster('env'):
      sys = Custom('','./qakicons/system.png')
 ### see https://renenyffenegger.ch/notes/tools/Graphviz/attributes/label/HTML-like/index
+     with Cluster('ctx_robot', graph_attr=nodeattr):
+          virtualrobot=Custom('virtualrobot','./qakicons/symActorWithobjSmall.png')
+     with Cluster('ctx_services', graph_attr=nodeattr):
+          product_service=Custom('product_service','./qakicons/symActorWithobjSmall.png')
+          cargo_service=Custom('cargo_service','./qakicons/symActorWithobjSmall.png')
 diag
