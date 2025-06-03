@@ -62,14 +62,19 @@ class Cargo_service ( name: String, scope: CoroutineScope, isconfined: Boolean=f
 				}	 
 				state("checkRequest") { //this:State
 					action { //it:State
-						 var check  
+						if( checkMsgContent( Term.createTerm("cargo_request(PID)"), Term.createTerm("cargo_request(PID)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								 var check = /* richiesta soddisfacibile? */  
+						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="waitForRequest", cond=doswitchGuarded({}) )
-					transition( edgeName="goto",targetState="waitPositioning", cond=doswitchGuarded({! () }) )
+					 transition( edgeName="goto",targetState="waitPositioning", cond=doswitchGuarded({ check  
+					}) )
+					transition( edgeName="goto",targetState="waitForRequest", cond=doswitchGuarded({! ( check  
+					) }) )
 				}	 
 				state("waitPositioning") { //this:State
 					action { //it:State
@@ -78,14 +83,18 @@ class Cargo_service ( name: String, scope: CoroutineScope, isconfined: Boolean=f
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition(edgeName="t02",targetState="putCargo",cond=whenEvent("sonarDetect"))
+					transition(edgeName="t03",targetState="sendAlarm",cond=whenEvent("sonarError"))
 				}	 
 				state("putCargo") { //this:State
 					action { //it:State
+						forward("putInSlot", "put_in_slot(SLOT)" ,"cargorobot" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition( edgeName="goto",targetState="waitForRobot", cond=doswitch() )
 				}	 
 				state("waitForRobot") { //this:State
 					action { //it:State
@@ -94,10 +103,32 @@ class Cargo_service ( name: String, scope: CoroutineScope, isconfined: Boolean=f
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t22",targetState="waitForRequest",cond=whenDispatch("positioned"))
+					 transition(edgeName="t24",targetState="waitForRequest",cond=whenDispatch("positioned"))
+					transition(edgeName="t25",targetState="sendAlarm",cond=whenEvent("sonarError"))
 				}	 
-				state("error") { //this:State
+				state("sendAlarm") { //this:State
 					action { //it:State
+						emit("alarm", "alarm(X)" ) 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="waitForAlarmEnd", cond=doswitch() )
+				}	 
+				state("waitForAlarmEnd") { //this:State
+					action { //it:State
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t36",targetState="alarmEnded",cond=whenEvent("sonarDetect"))
+					transition(edgeName="t37",targetState="waitForAlarmEnd",cond=whenEvent("sonarError"))
+				}	 
+				state("alarmEnded") { //this:State
+					action { //it:State
+						emit("alarmEnded", "alarmEnded(X)" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

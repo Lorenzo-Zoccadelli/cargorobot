@@ -4,34 +4,45 @@ System cargorobot_system
 
 
 Request	requestRegistration : registration(NAME, WEIGHT)
-Reply registrationDone : registration_done(X)
+Reply registrationDone : registration_done(PID)
 
 Request requestCargo : cargo_request(PID) 
 
 Dispatch putInSlot : put_in_slot(SLOT) 
 Dispatch positioned : positioned(X)
 Event alarm : alarm(X)
+Event alarmEnded : alarmEnded(X)
 
- Context ctx_robot ip [host="localhost" port=8020]
+//per ora si suppone che questi eventi siano lanciati da un gestore del sensore di basoo livello
+Event sonarDetect : distance(D) //detect D<=DFREE/2
+Event sonarError : distance(D)
+
+
+Context ctx_robot ip [host="localhost" port=8020]
 Context ctx_services ip [host="localhost" port=8021]
 
 
 QActor product_service context ctx_services {
 	State s0 initial{
-		// inizializza database? 
+		// inizializza database
 	}
 	Goto wait_registration
 	
 	State wait_registration {
-		// che cosa fa? 	
+			
 	}
 	Transition t0
 		whenRequest requestRegistration -> handle_registration 
 	
 	
 	State handle_registration{
-		// inserisce i dati del prodotto nel database 
-		// ritorna PID del prodotto 
+		
+		onMsg(requestRegistration : registration(NAME, WEIGHT)){
+			// inserisce i dati del prodotto nel database 
+			// ottiene il PID del prodotto 
+			replyTo requestRegistration with registrationDone : registration_done(PID)
+		}
+		
 	}
 	Goto wait_registration
 } 
@@ -61,33 +72,58 @@ QActor cargo_service context ctx_services {
 		whenRequest requestCargo -> checkRequest 
 		
 	State checkRequest{
-		[# var check #]
+		onMsg(requestCargo : cargo_request(PID)){
+			//recupera dati de product service?
+			[# var check = /* richiesta soddisfacibile? */ #]
+		}
 	}
-	Goto waitForRequest if[# #]else waitPositioning 
+	Goto waitPositioning if [# check #] else waitForRequest 
 	
 	State waitPositioning{
 		
 	}
+	Transition t0
+		whenEvent sonarDetect -> putCargo
+		whenEvent sonarError -> sendAlarm
 	
 	State putCargo{
-		
+		//seleziona slot
+		forward cargorobot -m putInSlot : put_in_slot(SLOT)
 	}
+	Goto waitForRobot
+	
 	
 	State waitForRobot{
 		
 	} 
 	Transition t2 
 		whenMsg positioned -> waitForRequest 
+		whenEvent sonarError -> sendAlarm
 		
 	
-	State error{
+	State sendAlarm{
 		// accendi led 
+		emit alarm : alarm(X) 
 	}
+	Goto waitForAlarmEnd
+	
+	State waitForAlarmEnd{
+		
+	}
+	Transition t3
+		whenEvent sonarDetect -> alarmEnded
+		whenEvent sonarError -> waitForAlarmEnd
+		
+	State alarmEnded{
+		// spegni led 
+		emit alarmEnded : alarmEnded(X) 
+	}
+	//??? tornare a chi lo ha chiamato
 } 
 
-QActor virtualrobot context ctx_robot {
+QActor cargorobot context ctx_robot {
 	State s0 initial{
-		
+		//inizializza modello stiva
 	}
 	
 	State waitForCargo{
@@ -97,16 +133,20 @@ QActor virtualrobot context ctx_robot {
 		whenMsg putInSlot -> goIOPort 
 	
 	State goIOPort {
-		
+		//trova il percorso per l'IOport
+		//si muove verso l'IOport
 	}
 	Goto putInSlot 
 			
 	State putInSlot{
-		
+		//trova il percorso verso lo slot
+		//si muove verso lo slot
 	}
+	Goto backHome
 	
 	State backHome{
-		
+		//trova il percorso per la Home
+		//si muove verso la Home
 	}
 	Goto waitForCargo
 	

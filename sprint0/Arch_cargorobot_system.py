@@ -26,8 +26,13 @@ with Diagram('cargorobot_systemArch', show=False, outformat='png', graph_attr=gr
      sys = Custom('','./qakicons/system.png')
 ### see https://renenyffenegger.ch/notes/tools/Graphviz/attributes/label/HTML-like/index
      with Cluster('ctx_robot', graph_attr=nodeattr):
-          virtualrobot=Custom('virtualrobot','./qakicons/symActorWithobjSmall.png')
+          cargorobot=Custom('cargorobot','./qakicons/symActorWithobjSmall.png')
      with Cluster('ctx_services', graph_attr=nodeattr):
           product_service=Custom('product_service','./qakicons/symActorWithobjSmall.png')
           cargo_service=Custom('cargo_service','./qakicons/symActorWithobjSmall.png')
+     sys >> Edge( label='sonarDetect', **evattr, decorate='true', fontcolor='darkgreen') >> cargo_service
+     sys >> Edge( label='sonarError', **evattr, decorate='true', fontcolor='darkgreen') >> cargo_service
+     cargo_service >> Edge( label='alarm', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     cargo_service >> Edge( label='alarmEnded', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     cargo_service >> Edge(color='blue', style='solid',  decorate='true', label='<putInSlot &nbsp; >',  fontcolor='blue') >> cargorobot
 diag
