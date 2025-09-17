@@ -38,31 +38,14 @@ class Webgui ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="wait_updates", cond=doswitch() )
-				}	 
-				state("wait_updates") { //this:State
-					action { //it:State
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t027",targetState="aggiorna_risorsa",cond=whenEvent("aggiornamentoStiva"))
 				}	 
 				state("aggiorna_risorsa") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("aggiornamentoStiva(STIVA)"), Term.createTerm("aggiornamentoStiva(STIVA)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								 statoStiva = payloadArg(0)  
-								updateResourceRep( "$statoStiva"  
-								)
-						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="wait_updates", cond=doswitch() )
 				}	 
 			}
 		}

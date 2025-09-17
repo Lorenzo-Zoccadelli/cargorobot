@@ -29,10 +29,6 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
-		
-				val maxPeso = 10000
-				var slotLiberi = 4
-				var pesoTotale = 0.0
 		return { //this:ActionBasciFsm
 				state("init") { //this:State
 					action { //it:State
@@ -52,77 +48,22 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t02",targetState="richiesta_carico_ricevuta",cond=whenRequest("richiestaCarico"))
+					 transition(edgeName="t02",targetState="caricaProdotto",cond=whenRequest("richiestaCarico"))
 					interrupthandle(edgeName="t03",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
-				state("richiesta_carico_ricevuta") { //this:State
+				state("caricaProdotto") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("richiestaCaricoCarico(PID)"), Term.createTerm("richiestaCarico(PID)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-													val PID = payloadArg(0).toInt()
-								CommUtils.outred("$name: ricevuta richiesta per caricamento prodotto con PID $PID")
-								request("recuperaProdotto", "recuperaProdotto(PID)" ,"productservice" )  
-						}
+						answer("richiestaCarico", "richiestaCaricoRifiutata", "richiestaCaricoAccettata("OK")"   )  
+						answer("richiestaCarico", "richiestaCaricoRifiutata", "richiestaCaricoRifiutata("Motivazione rifiuto")"   )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
+				 	 		stateTimer = TimerActor("timer_caricaProdotto", 
+				 	 					  scope, context!!, "local_tout_"+name+"_caricaProdotto", 10.toLong() )  //OCT2023
 					}	 	 
-					 transition(edgeName="t04",targetState="dati_prodotto_recuperati",cond=whenReply("dettagliProdotto"))
-					transition(edgeName="t05",targetState="errore_recupero_prodotto",cond=whenReply("prodottoNonTrovato"))
-					interrupthandle(edgeName="t06",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
-				}	 
-				state("errore_recupero_prodotto") { //this:State
-					action { //it:State
-						CommUtils.outred("$name: impossibile recuperare il prodotto con PID $PID")
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="wait_requests", cond=doswitch() )
-				}	 
-				state("dati_prodotto_recuperati") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("dettagliProdotto(PID,NOME,PESO)"), Term.createTerm("dettagliProdotto(PID,NOME,PESO)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-													val PID = payloadArg(0).toInt()
-													val nome = payloadArg(1)
-													val peso = payloadArg(2).toDouble()
-								CommUtils.outred("$name: recuperati i dati del prodotto $nome, $peso PID $PID")
-								if(  pesoTotale + peso <= maxPeso  
-								 ){if(  slotLiberi > 0  
-								 ){
-														val slot=1	//mock
-								
-														slotLiberi-=1
-														pesoTotale+=peso
-								forward("caricamentoContainer", "caricamentoContainer(slot)" ,"cargorobot" ) 
-								 statoStiva = "..."  
-								emit("aggiornamentoStiva", "aggiornamentoStiva(statoStiva)" ) 
-								}
-								else
-								 {CommUtils.outred("$name: richiesta rifiutata: nessuno slot disponibile")
-								 answer("richiestaCarico", "richiestaCaricoRifiutata", "richiestaCaricoRifiutata("Nessuno slot disponibile")"   )  
-								 forward("fine", "fine(1)" ,name ) 
-								 }
-								}
-								else
-								 {CommUtils.outred("$name: richiesta rifiutata: il peso eccede quello massimo")
-								 answer("richiestaCarico", "richiestaCaricoRifiutata", "richiestaCaricoRifiutata("Il peso del prodotto eccede quello massimo")"   )  
-								 forward("fine", "fine(1)" ,name ) 
-								 }
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t07",targetState="wait_requests",cond=whenDispatch("fine"))
-					transition(edgeName="t08",targetState="wait_requests",cond=whenEvent("fineCaricamentoContainer"))
-					interrupthandle(edgeName="t09",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
+					 transition(edgeName="t04",targetState="wait_requests",cond=whenTimeout("local_tout_"+name+"_caricaProdotto"))   
+					interrupthandle(edgeName="t05",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("anomalia_rilevata") { //this:State
 					action { //it:State
@@ -132,17 +73,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t010",targetState="resume",cond=whenEvent("risoluzioneAnomalia"))
-				}	 
-				state("resume") { //this:State
-					action { //it:State
-						CommUtils.outred("$name: malfunzionamento del sonar risolto, ripresa delle attività")
-						returnFromInterrupt(interruptedStateTransitions)
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
+					 transition(edgeName="t06",targetState="wait_requests",cond=whenEvent("risoluzioneAnomalia"))
 				}	 
 			}
 		}

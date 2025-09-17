@@ -29,8 +29,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
-		
-				var steps = 0	
 		return { //this:ActionBasciFsm
 				state("init") { //this:State
 					action { //it:State
@@ -49,81 +47,23 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
+				 	 		stateTimer = TimerActor("timer_wait_cmd", 
+				 	 					  scope, context!!, "local_tout_"+name+"_wait_cmd", 1.toLong() )  //OCT2023
 					}	 	 
-					 transition(edgeName="t011",targetState="caricamento_container",cond=whenDispatch("caricamentoContainer"))
-					interrupthandle(edgeName="t012",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
+					 transition(edgeName="t07",targetState="caricamento_container",cond=whenTimeout("local_tout_"+name+"_wait_cmd"))   
+					interrupthandle(edgeName="t08",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("caricamento_container") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("caricamentoContainer(SLOT)"), Term.createTerm("caricamentoContainer(SLOT)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-												val slot = payloadArg(0).toInt()
-								CommUtils.outyellow("$name: inizio caricamento container nello slot $slot")
-								 steps = 10  
-						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 				 	 		stateTimer = TimerActor("timer_caricamento_container", 
-				 	 					  scope, context!!, "local_tout_"+name+"_caricamento_container", 10.toLong() )  //OCT2023
+				 	 					  scope, context!!, "local_tout_"+name+"_caricamento_container", 1.toLong() )  //OCT2023
 					}	 	 
-					 transition(edgeName="t013",targetState="do_step_andata",cond=whenTimeout("local_tout_"+name+"_caricamento_container"))   
-					interrupthandle(edgeName="t014",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
-				}	 
-				state("do_step_andata") { //this:State
-					action { //it:State
-						delay(300) 
-						 steps-=1  
-						if(  steps==0  
-						 ){forward("fine", "fine(1)" ,name ) 
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-				 	 		stateTimer = TimerActor("timer_do_step_andata", 
-				 	 					  scope, context!!, "local_tout_"+name+"_do_step_andata", 10.toLong() )  //OCT2023
-					}	 	 
-					 transition(edgeName="t015",targetState="do_step_andata",cond=whenTimeout("local_tout_"+name+"_do_step_andata"))   
-					interrupthandle(edgeName="t016",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
-					transition(edgeName="t017",targetState="fine_caricamento",cond=whenDispatch("fine"))
-				}	 
-				state("fine_caricamento") { //this:State
-					action { //it:State
-						CommUtils.outyellow("$name: fine caricamento container nello slot, torno alla HOME")
-						emit("fineCaricamentoContainer", "fineCaricamentoContainer("OK")" ) 
-						 steps = 10  
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-				 	 		stateTimer = TimerActor("timer_fine_caricamento", 
-				 	 					  scope, context!!, "local_tout_"+name+"_fine_caricamento", 10.toLong() )  //OCT2023
-					}	 	 
-					 transition(edgeName="t018",targetState="do_step_ritorno",cond=whenTimeout("local_tout_"+name+"_fine_caricamento"))   
-					interrupthandle(edgeName="t019",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
-					transition(edgeName="t020",targetState="caricamento_container",cond=whenDispatch("caricamentoContainer"))
-				}	 
-				state("do_step_ritorno") { //this:State
-					action { //it:State
-						delay(300) 
-						 steps-=1  
-						if(  steps==0  
-						 ){forward("fine", "fine(1)" ,name ) 
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-				 	 		stateTimer = TimerActor("timer_do_step_ritorno", 
-				 	 					  scope, context!!, "local_tout_"+name+"_do_step_ritorno", 10.toLong() )  //OCT2023
-					}	 	 
-					 transition(edgeName="t021",targetState="do_step_ritorno",cond=whenTimeout("local_tout_"+name+"_do_step_ritorno"))   
-					interrupthandle(edgeName="t022",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
-					transition(edgeName="t023",targetState="caricamento_container",cond=whenDispatch("caricamentoContainer"))
-					transition(edgeName="t024",targetState="wait_cmd",cond=whenDispatch("fine"))
+					 transition(edgeName="t09",targetState="wait_cmd",cond=whenTimeout("local_tout_"+name+"_caricamento_container"))   
+					interrupthandle(edgeName="t010",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("anomalia_rilevata") { //this:State
 					action { //it:State
@@ -133,17 +73,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t025",targetState="resume",cond=whenEvent("risoluzioneAnomalia"))
-				}	 
-				state("resume") { //this:State
-					action { //it:State
-						CommUtils.outred("$name: malfunzionamento del sonar risolto, ripresa delle attività")
-						returnFromInterrupt(interruptedStateTransitions)
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
+					 transition(edgeName="t011",targetState="wait_cmd",cond=whenEvent("risoluzioneAnomalia"))
 				}	 
 			}
 		}
