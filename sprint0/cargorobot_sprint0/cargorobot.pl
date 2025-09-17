@@ -14,7 +14,6 @@ event( rilevazioneAnomalia, rilevazioneAnomalia(X) ).
 event( risoluzioneAnomalia, risoluzioneAnomalia(X) ).
 event( fineCaricamentoContainer, fineCaricamentoContainer(X) ).
 event( aggiornamentoStiva, aggiornamentoStiva(STIVA) ).
-dispatch( inizioCaricamento, inizioCaricamento(X) ).
 dispatch( fine, fine(X) ).
 %====================================================================================
 context(ctx_productervice, "localhost",  "TCP", "8080").
@@ -28,3 +27,7 @@ context(ctx_webgui, "localhost",  "TCP", "8084").
  static(cargoservice).
   qactor( cargorobot, ctx_cargorobot, "it.unibo.cargorobot.Cargorobot").
  static(cargorobot).
+  qactor( sonar, ctx_sonar, "it.unibo.sonar.Sonar").
+ static(sonar).
+  qactor( webgui, ctx_webgui, "it.unibo.webgui.Webgui").
+ static(webgui).

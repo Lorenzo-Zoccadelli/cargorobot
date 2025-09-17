@@ -21,7 +21,6 @@ Event		aggiornamentoStiva			:	aggiornamentoStiva(STIVA)
 
 
 //uso interno
-Dispatch	inizioCaricamento 			:	inizioCaricamento(X)
 Dispatch	fine 						:	fine(X)
 
 
@@ -184,7 +183,8 @@ QActor cargoservice context ctx_cargoservice {
 						pesoTotale+=peso
 					#]
 					forward cargorobot -m caricamentoContainer : caricamentoContainer(slot)
-					autodispatch inizioCaricamento : inizioCaricamento(1)
+					[# statoStiva = "..." #]
+					emit aggiornamentoStiva : aggiornamentoStiva(statoStiva)
 				}
 				else{
 					println("$name: richiesta rifiutata: nessuno slot disponibile") color red
@@ -200,7 +200,6 @@ QActor cargoservice context ctx_cargoservice {
 	}
 	Transition t0
 		whenMsg fine -> wait_requests
-		//whenMsg inizioCaricamento -> caricamento_in_corso
 		whenEvent fineCaricamentoContainer -> wait_requests
 		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
 	
@@ -348,4 +347,60 @@ QActor cargorobot context ctx_cargorobot{
 		returnFromInterrupt
 	}		
 }
+
+
+
+
+QActor sonar context ctx_sonar{	
+	
+	[# val DFREE = 100.0 #]
+	
+	State init initial {
+		println("$name: STARTING...") color green
+	}
+	Goto rilevazione
+	
+	State rilevazione{
+		//rilevazione D
+		[# val D = 70.0 #] //mock
+		
+		if [# D <= DFREE /* e c'era allarme */ #]{
+			emit risoluzioneAnomalia : risoluzioneAnomalia(1)
+		}
+		
+		if [# D <= DFREE/2 /* per 3s */ #]{
+			forward cargoservice -m caricamentoContainer : caricamentoContainer(1)//mock
+		}
+		if [# D > DFREE /* per 3s */ #]{
+			emit rilevazioneAnomalia : rilevazioneAnomalia(1)
+		}
+	}
+	Transition t0
+		whenTime 50 -> rilevazione
+}
+
+
+QActor webgui context ctx_webgui{
+	State init initial {
+		println("$name: STARTING...") color blue
+	}
+	Goto wait_updates
+	
+	State wait_updates{
+		
+	}
+	Transition t0
+		whenEvent aggiornamentoStiva -> aggiorna_risorsa
+	
+	
+	State aggiorna_risorsa{
+		onMsg(aggiornamentoStiva : aggiornamentoStiva(STIVA)){
+			[# statoStiva = payloadArg(0) #]
+			updateResource [# "$statoStiva" #]
+		}
+	}
+	Goto wait_updates
+}
+
+
 

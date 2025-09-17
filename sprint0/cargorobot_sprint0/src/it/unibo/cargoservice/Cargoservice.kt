@@ -100,7 +100,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 														slotLiberi-=1
 														pesoTotale+=peso
 								forward("caricamentoContainer", "caricamentoContainer(slot)" ,"cargorobot" ) 
-								forward("inizioCaricamento", "inizioCaricamento(1)" ,name ) 
+								 statoStiva = "..."  
+								emit("aggiornamentoStiva", "aggiornamentoStiva(statoStiva)" ) 
 								}
 								else
 								 {CommUtils.outred("$name: richiesta rifiutata: nessuno slot disponibile")
