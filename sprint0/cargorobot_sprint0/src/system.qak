@@ -1,1 +1,351 @@
 System cargorobot
+
+Request 	richiestaCarico 			:	richiestaCaricoCarico(PID)
+Reply		richiestaCaricoAccettata	:	richiestaCaricoAccettata(ESITO) for richiestaCarico
+Reply		richiestaCaricoRifiutata	:	richiestaCaricoRifiutata(ESITO) for richiestaCarico
+
+Request 	recuperaProdotto			:	recuperaProdotto(PID)
+Reply		dettagliProdotto			:	dettagliProdotto(PID, NOME, PESO) for recuperaProdotto
+Reply		prodottoNonTrovato			:	prodottoNonTrovato(X) for recuperaProdotto
+
+Request 	registrazioneProdotto		:	registrazioneProdotto(NOME, PESO)
+Reply		esitoRegistrazioneProdotto	:	esitoRegistrazioneProdotto(PID) for registrazioneProdotto
+
+Dispatch 	caricamentoContainer		:	caricamentoContainer(SLOT)
+
+
+Event		rilevazioneAnomalia			:	rilevazioneAnomalia(X)
+Event		risoluzioneAnomalia			:	risoluzioneAnomalia(X)
+Event		fineCaricamentoContainer	:	fineCaricamentoContainer(X)
+Event		aggiornamentoStiva			:	aggiornamentoStiva(STIVA)
+
+
+//uso interno
+Dispatch	inizioCaricamento 			:	inizioCaricamento(X)
+Dispatch	fine 						:	fine(X)
+
+
+
+Context ctx_productervice	ip[host="localhost" port=8080]
+Context ctx_cargoservice	ip[host="localhost" port=8081]
+Context ctx_cargorobot		ip[host="localhost" port=8082]
+Context ctx_sonar			ip[host="localhost" port=8083]
+Context ctx_webgui			ip[host="localhost" port=8084]
+
+
+QActor productservice context ctx_productervice {
+	
+	[#
+		//mock, poi sarà calcolato a partire dall'ultimo del db o in modo che in seguito
+		//a riavvii rimanga univoco
+		currentPID = 1	
+	#]
+	
+	State init initial {
+		println("$name: STARTING...") color cyan
+	}
+	Goto wait_requests 
+	
+	State wait_requests{
+		println("$name: in attesa di richieste...") color cyan
+	}
+	Transition t0
+		whenRequest registrazioneProdotto -> registrazione_prodotto
+		whenRequest recuperaProdotto -> recupera_prodotto
+	
+	
+	
+	State registrazione_prodotto{
+		onMsg(registrazioneProdotto : registrazioneProdotto(NOME, PESO)) {	
+			[#
+				val nome = payloadArg(0)
+				val peso = payloadArg(1).toDouble()
+				val PID = currentPID
+				currentPID+=1
+			#]
+			
+			//salva il nuovo prodotto sul db...
+			
+			println("$name: prodotto $nome, $peso (PID $PID)") color cyan
+			
+			replyTo registrazioneProdotto with esitoRegistrazioneProdotto : esitoRegistrazioneProdotto(PID)
+		}
+	}
+	Goto wait_requests
+	
+	
+		
+		
+	State recupera_prodotto{
+		onMsg(recuperaProdotto : recuperaProdotto(PID)) {
+			[#
+				val PID = payloadArg(0).toInt()
+			#]
+			
+			//recupera prodotto dal db a partire dal PID...
+			
+			
+			//condizione sarebbe se il prodotto esiste
+			if [# PID == 1 #]{	//condizione mock
+			
+				[#
+					//mock per test
+					val nome = "nome di test"
+					val peso = "peso di test"	
+				#]
+			
+				println("$name: recuperato prodotto $nome, $peso (PID $PID)") color cyan
+			
+				replyTo recuperaProdotto with dettagliProdotto: dettagliProdotto(pid, nome, peso)
+			}
+			else{
+				println("$name: prodotto con PID $PID non trovato") color cyan
+			
+				replyTo recuperaProdotto with prodottoNonTrovato: prodottoNonTrovato("prodotto non trovato")
+			}
+			
+		}
+	}
+	Goto wait_requests
+	
+}
+
+QActor cargoservice context ctx_cargoservice {
+	
+	[#
+		val maxPeso = 10000
+		var slotLiberi = 4
+		var pesoTotale = 0.0
+	#]
+	
+	
+	State init initial {
+		println("$name: STARTING...") color red
+	}
+	Goto wait_requests 
+
+	State wait_requests{
+		println("$name: in attesa di richieste...") color red
+	}
+	Transition t0
+		whenRequest richiestaCarico -> richiesta_carico_ricevuta
+		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
+		
+		
+		
+		
+	State richiesta_carico_ricevuta{
+		onMsg(richiestaCarico : richiestaCarico(PID)) {
+			[#
+					val PID = payloadArg(0).toInt()
+			#]
+			
+			println("$name: ricevuta richiesta per caricamento prodotto con PID $PID") color red
+			
+			request productservice -m recuperaProdotto : recuperaProdotto(PID)
+		}
+	}
+	Transition t0
+		whenReply dettagliProdotto -> dati_prodotto_recuperati
+		whenReply prodottoNonTrovato -> errore_recupero_prodotto
+		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
+	
+	
+	
+	State errore_recupero_prodotto {
+		println("$name: impossibile recuperare il prodotto con PID $PID") color red
+	}
+	Goto wait_requests
+	
+	
+	
+	State dati_prodotto_recuperati{
+		onMsg(dettagliProdotto : dettagliProdotto(PID, NOME, PESO)) {
+			[#
+					val PID = payloadArg(0).toInt()
+					val nome = payloadArg(1)
+					val peso = payloadArg(2).toDouble()
+			#]
+			
+			println("$name: recuperati i dati del prodotto $nome, $peso PID $PID") color red
+			
+			if [# pesoTotale + peso <= maxPeso #] {	
+				if [# slotLiberi > 0 #]{
+					//recupera slot libero
+					[#
+						val slot=1	//mock
+					#]
+					
+					//associa prodotto allo slot
+					
+					///aggiorna dati stiva
+					[#
+						slotLiberi-=1
+						pesoTotale+=peso
+					#]
+					forward cargorobot -m caricamentoContainer : caricamentoContainer(slot)
+					autodispatch inizioCaricamento : inizioCaricamento(1)
+				}
+				else{
+					println("$name: richiesta rifiutata: nessuno slot disponibile") color red
+					replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata("Nessuno slot disponibile")
+					autodispatch fine : fine(1)
+				}	
+			} else {
+				println("$name: richiesta rifiutata: il peso eccede quello massimo") color red
+				replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata("Il peso del prodotto eccede quello massimo")
+				autodispatch fine : fine(1)
+			}
+		}
+	}
+	Transition t0
+		whenMsg fine -> wait_requests
+		//whenMsg inizioCaricamento -> caricamento_in_corso
+		whenEvent fineCaricamentoContainer -> wait_requests
+		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
+	
+	/*
+	State caricamento_in_corso{
+		
+	}
+	Transition t0
+		whenEvent fineCaricamentoContainer -> wait_requests
+		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
+	*/
+	
+	State anomalia_rilevata{
+		println("$name: è stata ricevuta un'interruzione a seguito di un malfunzionamento del sonar") color red
+	}
+	Transition t0
+		whenEvent risoluzioneAnomalia -> resume
+		
+		
+	State resume{
+		println("$name: malfunzionamento del sonar risolto, ripresa delle attività") color red
+		returnFromInterrupt
+	}
+}
+
+
+
+
+
+
+QActor cargorobot context ctx_cargorobot{
+	
+	[#
+		var steps = 0	
+	#]
+	
+	
+	State init initial {
+		println("$name: STARTING...") color yellow
+	}
+	Goto wait_cmd
+	
+	State wait_cmd{
+		println("$name: in attesa di richieste...") color yellow
+	}
+	Transition t0
+		whenMsg caricamentoContainer -> caricamento_container
+		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
+
+
+
+	State caricamento_container{
+		onMsg(caricamentoContainer : caricamentoContainer(SLOT)) {
+			[#
+				val slot = payloadArg(0).toInt()
+			#]
+			
+			println("$name: inizio caricamento container nello slot $slot") color yellow
+			
+			//svuota lista passi
+			
+			//calcolo posizione attuale
+			
+			//calcolo posizione slot
+			
+			//calcolo percorso come passi elemntari
+			
+			//metto i passi elementari in una lista
+			[# steps = 10 #]//mock
+			
+		}
+	}
+	Transition t0
+		whenTime 10 -> do_step_andata
+		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
+		
+
+	State do_step_andata{
+		//recupero il prossimo step
+		
+		//eseguo il prossimo step
+		delay 300 //mock
+		
+		[# steps-=1 #] //mock
+		if [# steps==0 #]{ //mock
+			autodispatch fine : fine(1)
+		}
+	}
+	Transition t0
+		whenTime 10 -> do_step_andata
+		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
+		whenMsg fine -> fine_caricamento
+
+
+	State fine_caricamento{
+		println("$name: fine caricamento container nello slot, torno alla HOME") color yellow
+		
+		emit fineCaricamentoContainer : fineCaricamentoContainer("OK")
+		
+		//calcolo posizione attuale
+		
+		//calcolo posizione HOME
+		
+		//calcolo percorso come passi elemntari
+		
+		//metto i passi elementari in una lista
+		[# steps = 10 #]//mock
+			
+	}
+	Transition t0
+		whenTime 10 -> do_step_ritorno
+		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
+		whenMsg caricamentoContainer -> caricamento_container
+
+
+	State do_step_ritorno{
+		//recupero il prossimo step
+		
+		//eseguo il prossimo step
+		delay 300 //mock
+		
+		[# steps-=1 #] //mock
+		if [# steps==0 #]{ //mock
+			autodispatch fine : fine(1)
+		}
+	}
+	Transition t0
+		whenTime 10 -> do_step_ritorno
+		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
+		whenMsg caricamentoContainer -> caricamento_container
+		whenMsg fine -> wait_cmd
+	
+
+
+
+	State anomalia_rilevata{
+		println("$name: è stata ricevuta un'interruzione a seguito di un malfunzionamento del sonar") color red
+	}
+	Transition t0
+		whenEvent risoluzioneAnomalia -> resume
+		
+		
+	State resume{
+		println("$name: malfunzionamento del sonar risolto, ripresa delle attività") color red
+		returnFromInterrupt
+	}		
+}
+
