@@ -29,6 +29,9 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		
+				//mappa degli slot occupati
+				val pesoTot = 0.0	
 		return { //this:ActionBasciFsm
 				state("init") { //this:State
 					action { //it:State
@@ -55,6 +58,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					action { //it:State
 						answer("richiestaCarico", "richiestaCaricoRifiutata", "richiestaCaricoAccettata("OK")"   )  
 						answer("richiestaCarico", "richiestaCaricoRifiutata", "richiestaCaricoRifiutata("Motivazione rifiuto")"   )  
+						forward("caricamentoContainer", "caricamentoContainer(slot)" ,"cargorobot" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

@@ -7,8 +7,10 @@ reply( richiestaCaricoRifiutata, richiestaCaricoRifiutata(ESITO) ).  %%for richi
 request( recuperaProdotto, recuperaProdotto(PID) ).
 request( registrazioneProdotto, registrazioneProdotto(NOME,PESO) ).
 reply( esitoRegistrazioneProdotto, esitoRegistrazioneProdotto(PID) ).  %%for registrazioneProdotto
+dispatch( caricamentoContainer, caricamentoContainer(SLOT) ).
 event( rilevazioneAnomalia, rilevazioneAnomalia(X) ).
 event( risoluzioneAnomalia, risoluzioneAnomalia(X) ).
+event( aggiornamentoStiva, aggiornamentoStiva(STIVA) ).
 %====================================================================================
 context(ctx_productservice, "localhost",  "TCP", "8080").
 context(ctx_cargoservice, "localhost",  "TCP", "8081").

@@ -29,6 +29,8 @@ class Webgui ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		
+				//stato corrente della stiva	
 		return { //this:ActionBasciFsm
 				state("init") { //this:State
 					action { //it:State
@@ -38,6 +40,7 @@ class Webgui ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition(edgeName="t013",targetState="aggiorna_risorsa",cond=whenEvent("aggiornamentoStiva"))
 				}	 
 				state("aggiorna_risorsa") { //this:State
 					action { //it:State
@@ -46,6 +49,7 @@ class Webgui ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition(edgeName="t014",targetState="aggiorna_risorsa",cond=whenEvent("aggiornamentoStiva"))
 				}	 
 			}
 		}

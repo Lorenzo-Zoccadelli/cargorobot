@@ -47,10 +47,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
-				 	 		stateTimer = TimerActor("timer_wait_cmd", 
-				 	 					  scope, context!!, "local_tout_"+name+"_wait_cmd", 1.toLong() )  //OCT2023
 					}	 	 
-					 transition(edgeName="t07",targetState="caricamento_container",cond=whenTimeout("local_tout_"+name+"_wait_cmd"))   
+					 transition(edgeName="t07",targetState="caricamento_container",cond=whenDispatch("caricamentoContainer"))
 					interrupthandle(edgeName="t08",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("caricamento_container") { //this:State

@@ -9,9 +9,11 @@ Request 	recuperaProdotto			:	recuperaProdotto(PID)
 Request 	registrazioneProdotto		:	registrazioneProdotto(NOME, PESO)
 Reply		esitoRegistrazioneProdotto	:	esitoRegistrazioneProdotto(PID) for registrazioneProdotto
 
+Dispatch 	caricamentoContainer		:	caricamentoContainer(SLOT)
 
 Event		rilevazioneAnomalia			:	rilevazioneAnomalia(X)
 Event		risoluzioneAnomalia			:	risoluzioneAnomalia(X)
+Event		aggiornamentoStiva			:	aggiornamentoStiva(STIVA)
 
 
 Context ctx_productservice	ip[host="localhost" port=8080]
@@ -38,6 +40,7 @@ QActor productservice context ctx_productservice {
 	
 	
 	State registrazione_prodotto{
+		//registra prodotto nel db
 		replyTo registrazioneProdotto with esitoRegistrazioneProdotto : esitoRegistrazioneProdotto(PID)
 	}
 	Goto wait_requests
@@ -45,12 +48,18 @@ QActor productservice context ctx_productservice {
 	
 		
 	State recupera_prodotto{
+		//recupera il prodotto dal db
 	}
 	Goto wait_requests
 	
 }
 
 QActor cargoservice context ctx_cargoservice {	
+	
+	[#
+		//mappa degli slot occupati
+		val pesoTot = 0.0	
+	#]
 	
 	State init initial {
 		println("$name: STARTING...") color red
@@ -74,7 +83,10 @@ QActor cargoservice context ctx_cargoservice {
 		//oppure
 		replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata("Motivazione rifiuto")
 		
+		//associa il prodotto allo slot
+		
 		//comanda caricamento al robot
+		forward cargorobot -m caricamentoContainer : caricamentoContainer(slot)
 	}
 	Transition t0
 		whenTime 10 -> wait_requests
@@ -105,7 +117,7 @@ QActor cargorobot context ctx_cargorobot{
 		println("$name: in attesa di richieste...") color yellow
 	}
 	Transition t0
-		whenTime 1 -> caricamento_container
+		whenMsg caricamentoContainer -> caricamento_container
 		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
 
 
@@ -120,7 +132,7 @@ QActor cargorobot context ctx_cargorobot{
 	}
 	Transition t0
 		whenTime 1 -> wait_cmd
-		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
+		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata //durante tutti i momenti del movimento
 
 	State anomalia_rilevata{
 		println("$name: è stata ricevuta un'interruzione a seguito di un malfunzionamento del sonar") color red
@@ -134,6 +146,11 @@ QActor cargorobot context ctx_cargorobot{
 
 
 QActor sonar context ctx_sonar{	
+	
+	[#
+		val DFREE = 100.0
+		var D = 0.0
+	#]
 	
 	State init initial {
 		println("$name: STARTING...") color green
@@ -158,14 +175,21 @@ QActor sonar context ctx_sonar{
 
 
 QActor webgui context ctx_webgui{
+	[#
+		//stato corrente della stiva	
+	#]
 	State init initial {
 		println("$name: STARTING...") color blue
 	}
+	Transition t0
+		whenEvent aggiornamentoStiva -> aggiorna_risorsa
 	
 	
 	State aggiorna_risorsa{
 		//aggiorna la risorsa web
 	}
+	Transition t0
+		whenEvent aggiornamentoStiva -> aggiorna_risorsa
 }
 
 

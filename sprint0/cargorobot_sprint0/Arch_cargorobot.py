@@ -39,4 +39,6 @@ with Diagram('cargorobotArch', show=False, outformat='png', graph_attr=graphattr
      sys >> Edge( label='risoluzioneAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> cargorobot
      sonar >> Edge( label='rilevazioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      sonar >> Edge( label='risoluzioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     sys >> Edge( label='aggiornamentoStiva', **evattr, decorate='true', fontcolor='darkgreen') >> webgui
+     cargoservice >> Edge(color='blue', style='solid',  decorate='true', label='<caricamentoContainer &nbsp; >',  fontcolor='blue') >> cargorobot
 diag
