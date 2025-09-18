@@ -30,7 +30,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-				//mappa degli slot occupati
+				//associazione slot occupati
 				val pesoTot = 0.0	
 		return { //this:ActionBasciFsm
 				state("init") { //this:State
@@ -51,14 +51,13 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t02",targetState="caricaProdotto",cond=whenRequest("richiestaCarico"))
-					interrupthandle(edgeName="t03",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
+					 transition(edgeName="t01",targetState="caricaProdotto",cond=whenRequest("richiestaCarico"))
+					interrupthandle(edgeName="t02",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("caricaProdotto") { //this:State
 					action { //it:State
 						answer("richiestaCarico", "richiestaCaricoRifiutata", "richiestaCaricoAccettata("OK")"   )  
 						answer("richiestaCarico", "richiestaCaricoRifiutata", "richiestaCaricoRifiutata("Motivazione rifiuto")"   )  
-						forward("caricamentoContainer", "caricamentoContainer(slot)" ,"cargorobot" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -66,8 +65,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				 	 		stateTimer = TimerActor("timer_caricaProdotto", 
 				 	 					  scope, context!!, "local_tout_"+name+"_caricaProdotto", 10.toLong() )  //OCT2023
 					}	 	 
-					 transition(edgeName="t04",targetState="wait_requests",cond=whenTimeout("local_tout_"+name+"_caricaProdotto"))   
-					interrupthandle(edgeName="t05",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
+					 transition(edgeName="t03",targetState="wait_requests",cond=whenTimeout("local_tout_"+name+"_caricaProdotto"))   
+					interrupthandle(edgeName="t04",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("anomalia_rilevata") { //this:State
 					action { //it:State
@@ -77,7 +76,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t06",targetState="wait_requests",cond=whenEvent("risoluzioneAnomalia"))
+					 transition(edgeName="t05",targetState="wait_requests",cond=whenEvent("risoluzioneAnomalia"))
 				}	 
 			}
 		}

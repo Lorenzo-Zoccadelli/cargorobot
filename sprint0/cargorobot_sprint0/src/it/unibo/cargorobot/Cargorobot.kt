@@ -38,40 +38,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="wait_cmd", cond=doswitch() )
-				}	 
-				state("wait_cmd") { //this:State
-					action { //it:State
-						CommUtils.outyellow("$name: in attesa di richieste...")
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t07",targetState="caricamento_container",cond=whenDispatch("caricamentoContainer"))
-					interrupthandle(edgeName="t08",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
-				}	 
-				state("caricamento_container") { //this:State
-					action { //it:State
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-				 	 		stateTimer = TimerActor("timer_caricamento_container", 
-				 	 					  scope, context!!, "local_tout_"+name+"_caricamento_container", 1.toLong() )  //OCT2023
-					}	 	 
-					 transition(edgeName="t09",targetState="wait_cmd",cond=whenTimeout("local_tout_"+name+"_caricamento_container"))   
-					interrupthandle(edgeName="t010",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
-				}	 
-				state("anomalia_rilevata") { //this:State
-					action { //it:State
-						CommUtils.outred("$name: è stata ricevuta un'interruzione a seguito di un malfunzionamento del sonar")
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t011",targetState="wait_cmd",cond=whenEvent("risoluzioneAnomalia"))
 				}	 
 			}
 		}

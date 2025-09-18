@@ -4,22 +4,17 @@ Request 	richiestaCarico 			:	richiestaCaricoCarico(PID)
 Reply		richiestaCaricoAccettata	:	richiestaCaricoAccettata(ESITO) for richiestaCarico
 Reply		richiestaCaricoRifiutata	:	richiestaCaricoRifiutata(ESITO) for richiestaCarico
 
-Request 	recuperaProdotto			:	recuperaProdotto(PID)
-
 Request 	registrazioneProdotto		:	registrazioneProdotto(NOME, PESO)
 Reply		esitoRegistrazioneProdotto	:	esitoRegistrazioneProdotto(PID) for registrazioneProdotto
 
-Dispatch 	caricamentoContainer		:	caricamentoContainer(SLOT)
-
 Event		rilevazioneAnomalia			:	rilevazioneAnomalia(X)
 Event		risoluzioneAnomalia			:	risoluzioneAnomalia(X)
-Event		aggiornamentoStiva			:	aggiornamentoStiva(STIVA)
 
 
 Context ctx_productservice	ip[host="localhost" port=8080]
 Context ctx_cargoservice	ip[host="localhost" port=8081]
 Context ctx_cargorobot		ip[host="localhost" port=8082]
-Context ctx_sonar			ip[host="localhost" port=8083]
+Context ctx_ioport			ip[host="localhost" port=8083]
 Context ctx_webgui			ip[host="localhost" port=8084]
 
 
@@ -35,8 +30,6 @@ QActor productservice context ctx_productservice {
 	}
 	Transition t0
 		whenRequest registrazioneProdotto -> registrazione_prodotto
-		whenRequest recuperaProdotto -> recupera_prodotto
-	
 	
 	
 	State registrazione_prodotto{
@@ -45,19 +38,12 @@ QActor productservice context ctx_productservice {
 	}
 	Goto wait_requests
 	
-	
-		
-	State recupera_prodotto{
-		//recupera il prodotto dal db
-	}
-	Goto wait_requests
-	
 }
 
 QActor cargoservice context ctx_cargoservice {	
 	
 	[#
-		//mappa degli slot occupati
+		//associazione slot occupati
 		val pesoTot = 0.0	
 	#]
 	
@@ -86,7 +72,6 @@ QActor cargoservice context ctx_cargoservice {
 		//associa il prodotto allo slot
 		
 		//comanda caricamento al robot
-		forward cargorobot -m caricamentoContainer : caricamentoContainer(slot)
 	}
 	Transition t0
 		whenTime 10 -> wait_requests
@@ -111,41 +96,13 @@ QActor cargorobot context ctx_cargorobot{
 	State init initial {
 		println("$name: STARTING...") color yellow
 	}
-	Goto wait_cmd
-	
-	State wait_cmd{
-		println("$name: in attesa di richieste...") color yellow
-	}
-	Transition t0
-		whenMsg caricamentoContainer -> caricamento_container
-		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
-
-
-	State caricamento_container{
-		//raggiunge l'ioport
-		
-		//raggiunge lo slot
-		
-		//torna alla home se non viene richiamato
-		
-		//nel mentre in caso di anomalia si blocca
-	}
-	Transition t0
-		whenTime 1 -> wait_cmd
-		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata //durante tutti i momenti del movimento
-
-	State anomalia_rilevata{
-		println("$name: è stata ricevuta un'interruzione a seguito di un malfunzionamento del sonar") color red
-	}
-	Transition t0
-		whenEvent risoluzioneAnomalia -> wait_cmd
 
 }
 
 
 
 
-QActor sonar context ctx_sonar{	
+QActor ioport context ctx_ioport{	
 	
 	[#
 		val DFREE = 100.0
@@ -175,21 +132,9 @@ QActor sonar context ctx_sonar{
 
 
 QActor webgui context ctx_webgui{
-	[#
-		//stato corrente della stiva	
-	#]
 	State init initial {
 		println("$name: STARTING...") color blue
 	}
-	Transition t0
-		whenEvent aggiornamentoStiva -> aggiorna_risorsa
-	
-	
-	State aggiorna_risorsa{
-		//aggiorna la risorsa web
-	}
-	Transition t0
-		whenEvent aggiornamentoStiva -> aggiorna_risorsa
 }
 
 

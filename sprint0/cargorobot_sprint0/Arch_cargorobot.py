@@ -31,14 +31,11 @@ with Diagram('cargorobotArch', show=False, outformat='png', graph_attr=graphattr
           cargoservice=Custom('cargoservice','./qakicons/symActorWithobjSmall.png')
      with Cluster('ctx_cargorobot', graph_attr=nodeattr):
           cargorobot=Custom('cargorobot','./qakicons/symActorWithobjSmall.png')
-     with Cluster('ctx_sonar', graph_attr=nodeattr):
-          sonar=Custom('sonar','./qakicons/symActorWithobjSmall.png')
+     with Cluster('ctx_ioport', graph_attr=nodeattr):
+          ioport=Custom('ioport','./qakicons/symActorWithobjSmall.png')
      with Cluster('ctx_webgui', graph_attr=nodeattr):
           webgui=Custom('webgui','./qakicons/symActorWithobjSmall.png')
      sys >> Edge( label='risoluzioneAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> cargoservice
-     sys >> Edge( label='risoluzioneAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> cargorobot
-     sonar >> Edge( label='rilevazioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
-     sonar >> Edge( label='risoluzioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
-     sys >> Edge( label='aggiornamentoStiva', **evattr, decorate='true', fontcolor='darkgreen') >> webgui
-     cargoservice >> Edge(color='blue', style='solid',  decorate='true', label='<caricamentoContainer &nbsp; >',  fontcolor='blue') >> cargorobot
+     ioport >> Edge( label='rilevazioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     ioport >> Edge( label='risoluzioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
 diag
