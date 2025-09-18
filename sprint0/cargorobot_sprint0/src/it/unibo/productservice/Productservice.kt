@@ -29,10 +29,6 @@ class Productservice ( name: String, scope: CoroutineScope, isconfined: Boolean=
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
-		
-				//mock, poi sarà calcolato a partire dall'ultimo del db o in modo che in seguito
-				//a riavvii rimanga univoco
-				currentPID = 1	
 		return { //this:ActionBasciFsm
 				state("init") { //this:State
 					action { //it:State
@@ -57,16 +53,7 @@ class Productservice ( name: String, scope: CoroutineScope, isconfined: Boolean=
 				}	 
 				state("registrazione_prodotto") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("registrazioneProdotto(NOME,PESO)"), Term.createTerm("registrazioneProdotto(NOME,PESO)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-												val nome = payloadArg(0)
-												val peso = payloadArg(1).toDouble()
-												val PID = currentPID
-												currentPID+=1
-								CommUtils.outcyan("$name: prodotto $nome, $peso (PID $PID)")
-								answer("registrazioneProdotto", "esitoRegistrazioneProdotto", "esitoRegistrazioneProdotto(PID)"   )  
-						}
+						answer("registrazioneProdotto", "esitoRegistrazioneProdotto", "esitoRegistrazioneProdotto(PID)"   )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -76,23 +63,6 @@ class Productservice ( name: String, scope: CoroutineScope, isconfined: Boolean=
 				}	 
 				state("recupera_prodotto") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("recuperaProdotto(PID)"), Term.createTerm("recuperaProdotto(PID)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-												val PID = payloadArg(0).toInt()
-								if(  PID == 1  
-								 ){
-													//mock per test
-													val nome = "nome di test"
-													val peso = "peso di test"	
-								CommUtils.outcyan("$name: recuperato prodotto $nome, $peso (PID $PID)")
-								answer("recuperaProdotto", "dettagliProdotto", "dettagliProdotto(pid,nome,peso)"   )  
-								}
-								else
-								 {CommUtils.outcyan("$name: prodotto con PID $PID non trovato")
-								 answer("recuperaProdotto", "prodottoNonTrovato", "prodottoNonTrovato("prodotto non trovato")"   )  
-								 }
-						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

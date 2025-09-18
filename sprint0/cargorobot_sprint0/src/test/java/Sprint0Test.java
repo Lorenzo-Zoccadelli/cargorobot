@@ -8,16 +8,23 @@ import unibo.basicomm23.interfaces.Interaction;
 
 public class Sprint0Test {
 
-	private final static String hostname= "localhost";
-	private final static String portProductService	= "8080";
-	private final static String portCargoService	= "8081";
-
-	private Interaction connProductService;
-    private Interaction connCargoService;
-	
 	@Test
-	public void test() {
-		fail("Not yet implemented");
+	public void testRichiestaCaricoOK() {
+		
 	}
 
+	@Test
+	public void testRichiestaCaricoNoSlotLiberi() {
+		
+	}
+	
+	@Test
+	public void testRichiestaCaricoOltrePesoMassimo() {
+		
+	}
+	
+	@Test
+	public void testRichiestaCaricoProdottoNonPresente() {
+		
+	}
 }
