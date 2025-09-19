@@ -6,6 +6,9 @@ Gruppo di lavoro:
 - Guiducci Daniele
 - Zoccadelli Lorenzo
 
+# Requisiti
+[Requisiti](https://github.com/Lorenzo-Zoccadelli/cargorobot/tree/main/requisiti)
+
 # Sprint 0
 [Directory sprint 0](https://github.com/Lorenzo-Zoccadelli/cargorobot/tree/main/sprint0)
 \
