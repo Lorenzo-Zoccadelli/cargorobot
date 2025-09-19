@@ -59,7 +59,6 @@ QActor cargoservice context ctx_cargoservice {
 	}
 	Transition t0
 		whenRequest richiestaCarico -> caricaProdotto
-		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
 		
 	State caricaProdotto{
 		//recupera prodotto
@@ -73,21 +72,10 @@ QActor cargoservice context ctx_cargoservice {
 		
 		//comanda caricamento al robot
 	}
-	Transition t0
-		whenTime 10 -> wait_requests
-		whenInterruptEvent rilevazioneAnomalia -> anomalia_rilevata
+	Goto wait_requests
 		
-	
-	State anomalia_rilevata{
-		println("$name: è stata ricevuta un'interruzione a seguito di un malfunzionamento del sonar") color red
-	}
-	Transition t0
-		whenEvent risoluzioneAnomalia -> wait_requests
 		
 }
-
-
-
 
 
 

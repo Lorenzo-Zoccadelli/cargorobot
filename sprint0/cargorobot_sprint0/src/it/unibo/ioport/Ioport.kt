@@ -54,7 +54,7 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 				 	 		stateTimer = TimerActor("timer_rilevazione", 
 				 	 					  scope, context!!, "local_tout_"+name+"_rilevazione", 50.toLong() )  //OCT2023
 					}	 	 
-					 transition(edgeName="t06",targetState="rilevazione",cond=whenTimeout("local_tout_"+name+"_rilevazione"))   
+					 transition(edgeName="t02",targetState="rilevazione",cond=whenTimeout("local_tout_"+name+"_rilevazione"))   
 				}	 
 			}
 		}

@@ -35,7 +35,6 @@ with Diagram('cargorobotArch', show=False, outformat='png', graph_attr=graphattr
           ioport=Custom('ioport','./qakicons/symActorWithobjSmall.png')
      with Cluster('ctx_webgui', graph_attr=nodeattr):
           webgui=Custom('webgui','./qakicons/symActorWithobjSmall.png')
-     sys >> Edge( label='risoluzioneAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> cargoservice
      ioport >> Edge( label='rilevazioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      ioport >> Edge( label='risoluzioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
 diag

@@ -52,7 +52,6 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					sysaction { //it:State
 					}	 	 
 					 transition(edgeName="t01",targetState="caricaProdotto",cond=whenRequest("richiestaCarico"))
-					interrupthandle(edgeName="t02",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("caricaProdotto") { //this:State
 					action { //it:State
@@ -62,21 +61,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
-				 	 		stateTimer = TimerActor("timer_caricaProdotto", 
-				 	 					  scope, context!!, "local_tout_"+name+"_caricaProdotto", 10.toLong() )  //OCT2023
 					}	 	 
-					 transition(edgeName="t03",targetState="wait_requests",cond=whenTimeout("local_tout_"+name+"_caricaProdotto"))   
-					interrupthandle(edgeName="t04",targetState="anomalia_rilevata",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
-				}	 
-				state("anomalia_rilevata") { //this:State
-					action { //it:State
-						CommUtils.outred("$name: è stata ricevuta un'interruzione a seguito di un malfunzionamento del sonar")
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t05",targetState="wait_requests",cond=whenEvent("risoluzioneAnomalia"))
+					 transition( edgeName="goto",targetState="wait_requests", cond=doswitch() )
 				}	 
 			}
 		}
