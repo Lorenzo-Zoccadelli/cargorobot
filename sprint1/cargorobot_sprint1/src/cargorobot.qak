@@ -1,0 +1,219 @@
+System cargorobot
+
+Request		richiestaCaricamentoSlot : richiestaCaricamentoSlot(TARGETX, TARGETY)
+Reply		slotCaricato : slotCaricato(X) for richiestaCaricamentoSlot
+Reply		caricamentoFallito : caricamentoFallito(X) for richiestaCaricamentoSlot
+
+Event		rilevazioneAnomalia			:	rilevazioneAnomalia(X)
+Event		risoluzioneAnomalia			:	risoluzioneAnomalia(X)
+ 
+//-----------------------------
+// MESSAGGI PER BASICROBOT
+//-----------------------------
+Request engage : engage(CALLER, STEPTIME)
+Reply engagedone : engagedone(ARG) for engage
+Reply engagerefused : engagerefused(ARG) for engage
+
+Dispatch disengage    : disengage(ARG)
+
+Dispatch setdirection : dir( D )  //D =up|down|left|right
+Dispatch setrobotstate : setpos(X,Y,Dir)
+
+Request  doplan     : doplan( PATH, STEPTIME )
+Reply doplandone    : doplandone( ARG )    for doplan
+Reply doplanfailed  : doplanfailed( ARG )  for doplan
+
+Request step       : step(TIME)
+Reply stepdone     : stepdone(V)                 for step
+Reply stepfailed   : stepfailed(DURATION, CAUSE) for step
+
+Request moverobot    :  moverobot(TARGETX, TARGETY, STEPTIME)
+Reply moverobotdone  :  moverobotok(ARG)                    for moverobot
+Reply moverobotfailed:  moverobotfailed(PLANDONE, PLANTODO) for moverobot
+
+Event alarm           : alarm(X)
+//-----------------------------
+
+
+Context ctx_cargorobot		ip[host="localhost" port=8082]
+Context ctx_basicrobot 		ip[host="basicrobot25" port=8020]
+
+ExternalQActor basicrobot context ctx_basicrobot
+
+QActor cargorobot context ctx_cargorobot{
+	
+	[#
+		var CurrentSlotX = -1
+		var CurrentSlotY = -1
+		
+		var LastDestinationX = -1
+		var LastDestinationY = -1
+	#]
+	
+	/////////////////
+	//INIT
+	/////////////////
+	State init initial{
+		println("$name: STARTING...") color cyan
+		
+		//engage basicrobot
+		request basicrobot -m engage : engage($MyName, 340)
+	}
+	Transition t0
+		whenReply engagedone -> initDone
+		whenReply engagerefused -> initFailed
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+	
+	State initFailed{
+		println("$name: basicrobot engaging problem... shutting down") color cyan
+		[# System.exit(1) #]
+	}
+	
+	State initDone{
+		println("$name: basicrobot engaged correctly") color cyan
+	}
+	Goto waitRequests
+	
+	
+	
+	////////////////////
+	//WAIT REQS
+	////////////////////
+	State waitRequests{
+		[#
+			LastDestinationX = -1
+			LastDestinationY = -1
+		#]
+		autorequest richiestaCaricamentoSlot : richiestaCaricamentoSlot(3, 5)
+	}
+	Transition t0
+		whenRequest richiestaCaricamentoSlot -> processRichiestaCaricamentoSlot
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+	
+	State processRichiestaCaricamentoSlot{
+		onMsg(richiestaCaricamentoSlot : richiestaCaricamentoSlot(TARGETX, TARGETY)){
+			[#
+				CurrentSlotX = payloadArg(0).toInt()
+				CurrentSlotY = payloadArg(1).toInt()
+			#]
+		}
+	}
+	Goto goToIOPort
+	
+	/////////////////////
+	//LOADING CONTAINER
+	/////////////////////
+	
+	//To IOPort
+	State goToIOPort{
+		println("$name: going to IOPort...") color cyan
+		[#
+			LastDestinationX = 4
+			LastDestinationY = 0
+		#]
+		request basicrobot -m moverobot : moverobot(4, 0, 340)
+	}
+	Transition t0
+		whenReply moverobotdone -> atIOPort
+		whenReply moverobotfailed -> moveFailed
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+		
+	State atIOPort{
+		delay 2000
+	}
+	Goto goToSlot
+		
+	//To Slot
+	State goToSlot{
+		println("$name: going to slot ($CurrentSlotX, $CurrentSlotY)...") color cyan
+		[#
+			LastDestinationX = CurrentSlotX
+			LastDestinationY = CurrentSlotY
+		#]
+		request basicrobot -m moverobot : moverobot($CurrentSlotX, $CurrentSlotY, 340)
+	}
+	Transition t0
+		whenReply moverobotdone -> atSlot
+		whenReply moverobotfailed -> moveFailed
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+	
+	State atSlot{
+		delay 2000
+	}
+	Goto goToHome
+	
+	//To Home
+	State goToHome{
+		[#
+			CurrentSlotX = -1
+			CurrentSlotY = -1
+		#]
+		println("$name: going to HOME...") color cyan
+		replyTo richiestaCaricamentoSlot with slotCaricato : slotCaricato(0)
+		[#
+			LastDestinationX = 0
+			LastDestinationY = 0
+		#]
+		request basicrobot -m moverobot : moverobot(0, 0, 340)
+	}
+	Transition t0
+		whenReply moverobotdone -> waitRequests
+		whenReply moverobotfailed -> moveFailed
+		whenRequest richiestaCaricamentoSlot -> serviRichiestaPrimaDiHome
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+	
+	
+	
+	/////////////////////
+	//REQ PRIMA DI RAGGIUNGERE LA HOME
+	/////////////////////
+	State serviRichiestaPrimaDiHome{
+		[#
+			LastDestinationX = -1
+			LastDestinationY = -1
+		#]
+		emit alarm : alarm(0)
+		onMsg(richiestaCaricamentoSlot : richiestaCaricamentoSlot(TARGETX, TARGETY)){
+			[#
+				CurrentSlotX = payloadArg(0).toInt()
+				CurrentSlotY = payloadArg(1).toInt()
+			#]
+		}
+	}
+	Goto goToIOPort
+	
+	
+	
+	
+	/////////////////////
+	//GESTIONE MALFUNZIONAMENTO
+	/////////////////////
+	State handleAnomalia{
+		println("$name: rilevazione anomalia...") color cyan
+		emit alarm : alarm(0)
+	}
+	Transition t0
+		whenEvent risoluzioneAnomalia -> resumeFromAnomalia
+	
+	State resumeFromAnomalia{
+		println("$name: anomalia risolta...") color cyan
+		if [# LastDestinationX != -1 && LastDestinationY != -1 #]{
+			request basicrobot -m moverobot : moverobot($LastDestinationX, $LastDestinationY, 340)
+		}
+		
+		returnFromInterrupt
+	}
+
+	
+	/////////////////////
+	//GESTIONE MOVEFAILED
+	/////////////////////
+	State moveFailed{
+		replyTo richiestaCaricamentoSlot with caricamentoFallito : caricamentoFallito(1)
+	}
+	Goto waitRequests
+}
+
+
+
+
