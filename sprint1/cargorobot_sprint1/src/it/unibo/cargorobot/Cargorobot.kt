@@ -19,6 +19,7 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
+import main.java.model.*
 
 class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -30,8 +31,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-				var CurrentSlotX = -1
-				var CurrentSlotY = -1
+				var CurrentSlot: Slot? = null
 				
 				var LastDestinationX = -1
 				var LastDestinationY = -1
@@ -74,7 +74,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						
 									LastDestinationX = -1
 									LastDestinationY = -1
-						request("richiestaCaricamentoSlot", "richiestaCaricamentoSlot(3,5)" ,name ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -85,11 +84,12 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("processRichiestaCaricamentoSlot") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("richiestaCaricamentoSlot(TARGETX,TARGETY)"), Term.createTerm("richiestaCaricamentoSlot(TARGETX,TARGETY)"), 
+						if( checkMsgContent( Term.createTerm("richiestaCaricamentoSlot(SlotJson)"), Term.createTerm("richiestaCaricamentoSlot(SlotJson)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-												CurrentSlotX = payloadArg(0).toInt()
-												CurrentSlotY = payloadArg(1).toInt()
+												val SlotJson = payloadArg(0).toString()
+												CurrentSlot = Slot(SlotJson)
+								CommUtils.outcyan("$name: $CurrentSlot")
 						}
 						//genTimer( actor, state )
 					}
@@ -126,11 +126,14 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("goToSlot") { //this:State
 					action { //it:State
-						CommUtils.outcyan("$name: going to slot ($CurrentSlotX, $CurrentSlotY)...")
 						
-									LastDestinationX = CurrentSlotX
-									LastDestinationY = CurrentSlotY
-						request("moverobot", "moverobot($CurrentSlotX,$CurrentSlotY,340)" ,"basicrobot" )  
+									val SlotPosX = CurrentSlot!!.getPosX()
+									val SlotPosY = CurrentSlot!!.getPosY()
+									
+									LastDestinationX = CurrentSlot!!.getLoadingPosX()
+									LastDestinationY = CurrentSlot!!.getLoadingPosY()
+						CommUtils.outcyan("$name: going to slot ($SlotPosX, $SlotPosY) ($LastDestinationX, $LastDestinationY)...")
+						request("moverobot", "moverobot($LastDestinationX,$LastDestinationY,340)" ,"basicrobot" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -153,8 +156,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				state("goToHome") { //this:State
 					action { //it:State
 						
-									CurrentSlotX = -1
-									CurrentSlotY = -1
+									CurrentSlot = null
 						CommUtils.outcyan("$name: going to HOME...")
 						answer("richiestaCaricamentoSlot", "slotCaricato", "slotCaricato(0)"   )  
 						
@@ -177,11 +179,11 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 									LastDestinationX = -1
 									LastDestinationY = -1
 						emit("alarm", "alarm(0)" ) 
-						if( checkMsgContent( Term.createTerm("richiestaCaricamentoSlot(TARGETX,TARGETY)"), Term.createTerm("richiestaCaricamentoSlot(TARGETX,TARGETY)"), 
+						if( checkMsgContent( Term.createTerm("richiestaCaricamentoSlot(SlotJson)"), Term.createTerm("richiestaCaricamentoSlot(SlotJson)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-												CurrentSlotX = payloadArg(0).toInt()
-												CurrentSlotY = payloadArg(1).toInt()
+												val SlotJson = payloadArg(0).toString()
+												CurrentSlot = Slot(SlotJson)
 						}
 						//genTimer( actor, state )
 					}

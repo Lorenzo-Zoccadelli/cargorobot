@@ -1,7 +1,7 @@
 %====================================================================================
 % cargorobot description   
 %====================================================================================
-request( richiestaCaricamentoSlot, richiestaCaricamentoSlot(TARGETX,TARGETY) ).
+request( richiestaCaricamentoSlot, richiestaCaricamentoSlot(SlotJson) ).
 reply( slotCaricato, slotCaricato(X) ).  %%for richiestaCaricamentoSlot
 reply( caricamentoFallito, caricamentoFallito(X) ).  %%for richiestaCaricamentoSlot
 event( rilevazioneAnomalia, rilevazioneAnomalia(X) ).
@@ -24,7 +24,7 @@ reply( moverobotfailed, moverobotfailed(PLANDONE,PLANTODO) ).  %%for moverobot
 event( alarm, alarm(X) ).
 %====================================================================================
 context(ctx_cargorobot, "localhost",  "TCP", "8082").
-context(ctx_basicrobot, "basicrobot25",  "TCP", "8020").
+context(ctx_basicrobot, "127.0.0.1",  "TCP", "8020").
  qactor( basicrobot, ctx_basicrobot, "external").
   qactor( cargorobot, ctx_cargorobot, "it.unibo.cargorobot.Cargorobot").
  static(cargorobot).

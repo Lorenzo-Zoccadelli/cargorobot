@@ -31,6 +31,7 @@ with Diagram('cargoserviceArch', show=False, outformat='png', graph_attr=graphat
           cargoservice=Custom('cargoservice','./qakicons/symActorWithobjSmall.png')
      with Cluster('ctx_cargorobot', graph_attr=nodeattr):
           cargorobot=Custom('cargorobot(ext)','./qakicons/externalQActor.png')
+     sys >> Edge( label='containerRilevato', **evattr, decorate='true', fontcolor='darkgreen') >> cargoservice
      sys >> Edge( label='risoluzioneAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> cargoservice
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<getProduct<font color="darkgreen"> getProductAnswer</font> &nbsp; >',  fontcolor='magenta') >> productservice
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<richiestaCaricamentoSlot<font color="darkgreen"> slotCaricato caricamentoFallito</font> &nbsp; >',  fontcolor='magenta') >> cargorobot

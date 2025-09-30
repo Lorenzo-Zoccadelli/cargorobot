@@ -14,6 +14,10 @@ Reply		richiestaCaricoRifiutata	:	richiestaCaricoRifiutata(ESITO) for richiestaC
 Event		rilevazioneAnomalia			:	rilevazioneAnomalia(X)
 Event		risoluzioneAnomalia			:	risoluzioneAnomalia(X)
            
+//////////////////
+//DAL SONAR
+//////////////////
+Event 		containerRilevato			:	containerRilevato(X)
 
 //////////////////
 //INTERNI
@@ -41,9 +45,9 @@ Reply		caricamentoFallito : caricamentoFallito(X) for richiestaCaricamentoSlot
 
 
 //CTXs
-Context ctx_productservice	ip[host="productservice" port=8000]
+Context ctx_productservice	ip[host="127.0.0.1" port=8111]
 Context ctx_cargoservice	ip[host="localhost" port=8081]
-Context ctx_cargorobot		ip[host="cargorobot" port=8082]
+Context ctx_cargorobot		ip[host="127.0.0.1" port=8082]
 
 ExternalQActor productservice context ctx_productservice
 ExternalQActor cargorobot context ctx_cargorobot
@@ -94,12 +98,10 @@ QActor cargoservice context ctx_cargoservice {
 		onMsg(getProductAnswer : product(JSonString)){
 			[#
 				val JsonString = payloadArg(0).toString()
+				currentProduct = Product(JsonString)
 			#]
-			//...
-			if[#reqok#]{
-				//salva dati in currentProduct
-			}
-			else{
+			
+			if[# currentProduct!!.getProductId() <= 0 #]{	//ERRORE
 				println("$name: il prodotto richiesto non esiste") color red
 				[# val Esito = "Prodotto non esistente"#]
 				replyTo richiestaCarico with richiestaCaricoAccettata : richiestaCaricoAccettata($Esito)
@@ -111,7 +113,6 @@ QActor cargoservice context ctx_cargoservice {
 		whenTime 10 -> assegnamentoSlot
 		whenMsg endLocal -> wait_requests
 		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
-		
 	
 	
 	////////////////////
@@ -126,7 +127,7 @@ QActor cargoservice context ctx_cargoservice {
 			autodispatch endLocal : endLocal(0)
 		}
 		else {
-			if[# slotMap.getTotalWeight + currentProduct.getWeight() > MAX_LOAD #]{
+			if[# slotMap.getTotalWeight() + currentProduct!!.getWeight() > MAX_LOAD #]{
 				println("$name: richiesta rifiutata, peso eccessivo") color red
 				[# val Esito = "Il prodotto eccede il peso massimo della stiva"#]
 				replyTo richiestaCarico with richiestaCaricoAccettata : richiestaCaricoAccettata($Esito)
@@ -147,11 +148,19 @@ QActor cargoservice context ctx_cargoservice {
 		#]
 	}
 	Transition t0
-		whenTime 10 -> caricaProdotto
+		whenTime 10 -> waitContainer
 		whenMsg endLocal -> wait_requests
 		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
 		
 		
+	
+	
+	State waitContainer{
+		println("$name: in attesa che il container venga messo davanti all'IOPort") color red
+	}
+	Transition t0
+		whenEvent containerRilevato -> caricaProdotto
+	
 	
 	////////////////////
 	//REQ AL CARGOROBOT
@@ -159,7 +168,7 @@ QActor cargoservice context ctx_cargoservice {
 	State caricaProdotto{
 		println("$name: caricamento prodotto da parte del cargorobot iniziato") color red
 		[#
-			val SlotJson = //...converti currentSlot in json
+			val SlotJson = "\'" + currentSlot.toString() + "\'" 
 			currentSlot=null
 		#]
 		request cargorobot -m richiestaCaricamentoSlot : richiestaCaricamentoSlot($SlotJson)

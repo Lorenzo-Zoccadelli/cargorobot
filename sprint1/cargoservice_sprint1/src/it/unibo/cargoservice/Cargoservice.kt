@@ -80,14 +80,13 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
 												val JsonString = payloadArg(0).toString()
-								if( reqok 
-								 ){}
-								else
-								 {CommUtils.outred("$name: il prodotto richiesto non esiste")
-								  val Esito = "Prodotto non esistente" 
-								 answer("richiestaCarico", "richiestaCaricoAccettata", "richiestaCaricoAccettata($Esito)"   )  
-								 forward("endLocal", "endLocal(0)" ,name ) 
-								 }
+												currentProduct = Product(JsonString)
+								if(  currentProduct!!.getProductId() <= 0  
+								 ){CommUtils.outred("$name: il prodotto richiesto non esiste")
+								 val Esito = "Prodotto non esistente" 
+								answer("richiestaCarico", "richiestaCaricoAccettata", "richiestaCaricoAccettata($Esito)"   )  
+								forward("endLocal", "endLocal(0)" ,name ) 
+								}
 						}
 						//genTimer( actor, state )
 					}
@@ -110,7 +109,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 						forward("endLocal", "endLocal(0)" ,name ) 
 						}
 						else
-						 {if(  slotMap.getTotalWeight + currentProduct.getWeight() > MAX_LOAD  
+						 {if(  slotMap.getTotalWeight() + currentProduct!!.getWeight() > MAX_LOAD  
 						  ){CommUtils.outred("$name: richiesta rifiutata, peso eccessivo")
 						  val Esito = "Il prodotto eccede il peso massimo della stiva" 
 						 answer("richiestaCarico", "richiestaCaricoAccettata", "richiestaCaricoAccettata($Esito)"   )  
@@ -134,15 +133,25 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				 	 		stateTimer = TimerActor("timer_assegnamentoSlot", 
 				 	 					  scope, context!!, "local_tout_"+name+"_assegnamentoSlot", 10.toLong() )  //OCT2023
 					}	 	 
-					 transition(edgeName="t07",targetState="caricaProdotto",cond=whenTimeout("local_tout_"+name+"_assegnamentoSlot"))   
+					 transition(edgeName="t07",targetState="waitContainer",cond=whenTimeout("local_tout_"+name+"_assegnamentoSlot"))   
 					transition(edgeName="t08",targetState="wait_requests",cond=whenDispatch("endLocal"))
 					interrupthandle(edgeName="t09",targetState="handleAnomalia",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
+				}	 
+				state("waitContainer") { //this:State
+					action { //it:State
+						CommUtils.outred("$name: in attesa che il container venga messo davanti all'IOPort")
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t010",targetState="caricaProdotto",cond=whenEvent("containerRilevato"))
 				}	 
 				state("caricaProdotto") { //this:State
 					action { //it:State
 						CommUtils.outred("$name: caricamento prodotto da parte del cargorobot iniziato")
 						
-									val SlotJson = //...converti currentSlot in json
+									val SlotJson = "\'" + currentSlot.toString() + "\'" 
 									currentSlot=null
 						request("richiestaCaricamentoSlot", "richiestaCaricamentoSlot($SlotJson)" ,"cargorobot" )  
 						//genTimer( actor, state )
@@ -150,9 +159,9 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t010",targetState="caricamentoTerminato",cond=whenReply("slotCaricato"))
-					transition(edgeName="t011",targetState="problemaCaricamento",cond=whenReply("caricamentoFallito"))
-					interrupthandle(edgeName="t012",targetState="handleAnomalia",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
+					 transition(edgeName="t011",targetState="caricamentoTerminato",cond=whenReply("slotCaricato"))
+					transition(edgeName="t012",targetState="problemaCaricamento",cond=whenReply("caricamentoFallito"))
+					interrupthandle(edgeName="t013",targetState="handleAnomalia",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("caricamentoTerminato") { //this:State
 					action { //it:State
@@ -182,7 +191,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t013",targetState="resumeFromAnomalia",cond=whenEvent("risoluzioneAnomalia"))
+					 transition(edgeName="t014",targetState="resumeFromAnomalia",cond=whenEvent("risoluzioneAnomalia"))
 				}	 
 				state("resumeFromAnomalia") { //this:State
 					action { //it:State

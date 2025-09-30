@@ -47,7 +47,7 @@ public abstract class SlotMap {
 	
 	public void putProductIntoSlot(Slot slot, Product product) {
 		if(slotExists(slot) && isSlotEmpty(slot)) slotMap.put(slot, product);
-		throw new IllegalStateException("Slot "+slot+" does not exists or is full");
+		else throw new IllegalStateException("Slot "+slot+" does not exists or is full");
 	}
 	
 	public List<Product> getRegisteredProducts(){

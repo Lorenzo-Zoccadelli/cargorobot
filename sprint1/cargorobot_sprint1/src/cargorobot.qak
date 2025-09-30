@@ -1,6 +1,6 @@
 System cargorobot
 
-Request		richiestaCaricamentoSlot : richiestaCaricamentoSlot(TARGETX, TARGETY)
+Request		richiestaCaricamentoSlot : richiestaCaricamentoSlot(SlotJson)
 Reply		slotCaricato : slotCaricato(X) for richiestaCaricamentoSlot
 Reply		caricamentoFallito : caricamentoFallito(X) for richiestaCaricamentoSlot
 
@@ -36,15 +36,15 @@ Event alarm           : alarm(X)
 
 
 Context ctx_cargorobot		ip[host="localhost" port=8082]
-Context ctx_basicrobot 		ip[host="basicrobot25" port=8020]
+Context ctx_basicrobot 		ip[host="127.0.0.1" port=8020]
 
 ExternalQActor basicrobot context ctx_basicrobot
 
 QActor cargorobot context ctx_cargorobot{
+	import "main.java.model.*"
 	
 	[#
-		var CurrentSlotX = -1
-		var CurrentSlotY = -1
+		var CurrentSlot: Slot? = null
 		
 		var LastDestinationX = -1
 		var LastDestinationY = -1
@@ -84,18 +84,24 @@ QActor cargorobot context ctx_cargorobot{
 			LastDestinationX = -1
 			LastDestinationY = -1
 		#]
-		autorequest richiestaCaricamentoSlot : richiestaCaricamentoSlot(3, 5)
+		
+		/*
+		[# val MOCKSLOT = "'" + (Slot("s1", 3, 4, 3, 5).toString()) + "'" #]
+		autorequest richiestaCaricamentoSlot : richiestaCaricamentoSlot($MOCKSLOT)
+		*/
 	}
 	Transition t0
 		whenRequest richiestaCaricamentoSlot -> processRichiestaCaricamentoSlot
 		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
 	
 	State processRichiestaCaricamentoSlot{
-		onMsg(richiestaCaricamentoSlot : richiestaCaricamentoSlot(TARGETX, TARGETY)){
+		onMsg(richiestaCaricamentoSlot : richiestaCaricamentoSlot(SlotJson)){
 			[#
-				CurrentSlotX = payloadArg(0).toInt()
-				CurrentSlotY = payloadArg(1).toInt()
+				val SlotJson = payloadArg(0).toString()
+				CurrentSlot = Slot(SlotJson)
 			#]
+			
+			println("$name: $CurrentSlot") color cyan
 		}
 	}
 	Goto goToIOPort
@@ -125,12 +131,18 @@ QActor cargorobot context ctx_cargorobot{
 		
 	//To Slot
 	State goToSlot{
-		println("$name: going to slot ($CurrentSlotX, $CurrentSlotY)...") color cyan
+		
 		[#
-			LastDestinationX = CurrentSlotX
-			LastDestinationY = CurrentSlotY
+			val SlotPosX = CurrentSlot!!.getPosX()
+			val SlotPosY = CurrentSlot!!.getPosY()
+			
+			LastDestinationX = CurrentSlot!!.getLoadingPosX()
+			LastDestinationY = CurrentSlot!!.getLoadingPosY()
 		#]
-		request basicrobot -m moverobot : moverobot($CurrentSlotX, $CurrentSlotY, 340)
+		
+		println("$name: going to slot ($SlotPosX, $SlotPosY) ($LastDestinationX, $LastDestinationY)...") color cyan
+		
+		request basicrobot -m moverobot : moverobot($LastDestinationX, $LastDestinationY, 340)
 	}
 	Transition t0
 		whenReply moverobotdone -> atSlot
@@ -145,8 +157,7 @@ QActor cargorobot context ctx_cargorobot{
 	//To Home
 	State goToHome{
 		[#
-			CurrentSlotX = -1
-			CurrentSlotY = -1
+			CurrentSlot = null
 		#]
 		println("$name: going to HOME...") color cyan
 		replyTo richiestaCaricamentoSlot with slotCaricato : slotCaricato(0)
@@ -173,10 +184,10 @@ QActor cargorobot context ctx_cargorobot{
 			LastDestinationY = -1
 		#]
 		emit alarm : alarm(0)
-		onMsg(richiestaCaricamentoSlot : richiestaCaricamentoSlot(TARGETX, TARGETY)){
+		onMsg(richiestaCaricamentoSlot : richiestaCaricamentoSlot(SlotJson)){
 			[#
-				CurrentSlotX = payloadArg(0).toInt()
-				CurrentSlotY = payloadArg(1).toInt()
+				val SlotJson = payloadArg(0).toString()
+				CurrentSlot = Slot(SlotJson)
 			#]
 		}
 	}
