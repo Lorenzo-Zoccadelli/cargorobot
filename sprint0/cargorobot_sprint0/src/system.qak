@@ -16,7 +16,7 @@ Context ctx_cargoservice	ip[host="localhost" port=8081]
 Context ctx_cargorobot		ip[host="localhost" port=8082]
 Context ctx_ioport			ip[host="localhost" port=8083]
 Context ctx_webgui			ip[host="localhost" port=8084]
-Context ctx_client_esterno  ip[host="localhost" port=8084]
+
 
 QActor productservice context ctx_productservice {
 	
@@ -118,35 +118,10 @@ QActor ioport context ctx_ioport{
 		whenTime 50 -> rilevazione
 }
 
- 
-QActor sonar context ctx_ioport{	
-	
-	State init initial {
-		println("$name: STARTING...") color green
-	}
-	
-}
-
-QActor led context ctx_ioport{	
-	
-	State init initial {
-		println("$name: STARTING...") color green
-	}
-	
-}
-
 
 QActor webgui context ctx_webgui{
 	State init initial {
 		println("$name: STARTING...") color blue
-	}
-}
-
-
-QActor client_esterno context ctx_client_esterno{
-	State init initial{
-		request cargoservice -m richiestaCarico : richiestaCarico(x)
-		request productservice -m registrazioneProdotto : registrazioneProdotto(x, y)
 	}
 }
 

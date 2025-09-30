@@ -29,6 +29,9 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		
+				val DFREE = 100.0
+				var D = 0.0
 		return { //this:ActionBasciFsm
 				state("init") { //this:State
 					action { //it:State
@@ -38,6 +41,20 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition( edgeName="goto",targetState="rilevazione", cond=doswitch() )
+				}	 
+				state("rilevazione") { //this:State
+					action { //it:State
+						emit("rilevazioneAnomalia", "rilevazioneAnomalia(1)" ) 
+						emit("risoluzioneAnomalia", "risoluzioneAnomalia(1)" ) 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+				 	 		stateTimer = TimerActor("timer_rilevazione", 
+				 	 					  scope, context!!, "local_tout_"+name+"_rilevazione", 50.toLong() )  //OCT2023
+					}	 	 
+					 transition(edgeName="t012",targetState="rilevazione",cond=whenTimeout("local_tout_"+name+"_rilevazione"))   
 				}	 
 			}
 		}

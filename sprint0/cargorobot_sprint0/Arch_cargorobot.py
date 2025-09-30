@@ -33,14 +33,8 @@ with Diagram('cargorobotArch', show=False, outformat='png', graph_attr=graphattr
           cargorobot=Custom('cargorobot','./qakicons/symActorWithobjSmall.png')
      with Cluster('ctx_ioport', graph_attr=nodeattr):
           ioport=Custom('ioport','./qakicons/symActorWithobjSmall.png')
-          sonar=Custom('sonar','./qakicons/symActorWithobjSmall.png')
-          led=Custom('led','./qakicons/symActorWithobjSmall.png')
      with Cluster('ctx_webgui', graph_attr=nodeattr):
           webgui=Custom('webgui','./qakicons/symActorWithobjSmall.png')
-     with Cluster('ctx_client_esterno', graph_attr=nodeattr):
-          client_esterno=Custom('client_esterno','./qakicons/symActorWithobjSmall.png')
      ioport >> Edge( label='rilevazioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      ioport >> Edge( label='risoluzioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
-     client_esterno >> Edge(color='magenta', style='solid', decorate='true', label='<registrazioneProdotto<font color="darkgreen"> esitoRegistrazioneProdotto</font> &nbsp; >',  fontcolor='magenta') >> productservice
-     client_esterno >> Edge(color='magenta', style='solid', decorate='true', label='<richiestaCarico<font color="darkgreen"> richiestaCaricoAccettata richiestaCaricoRifiutata</font> &nbsp; >',  fontcolor='magenta') >> cargoservice
 diag
