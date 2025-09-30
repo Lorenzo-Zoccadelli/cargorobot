@@ -14,6 +14,7 @@ context(ctx_cargoservice, "localhost",  "TCP", "8081").
 context(ctx_cargorobot, "localhost",  "TCP", "8082").
 context(ctx_ioport, "localhost",  "TCP", "8083").
 context(ctx_webgui, "localhost",  "TCP", "8084").
+context(ctx_client_esterno, "localhost",  "TCP", "8084").
  qactor( productservice, ctx_productservice, "it.unibo.productservice.Productservice").
  static(productservice).
   qactor( cargoservice, ctx_cargoservice, "it.unibo.cargoservice.Cargoservice").
@@ -22,5 +23,11 @@ context(ctx_webgui, "localhost",  "TCP", "8084").
  static(cargorobot).
   qactor( ioport, ctx_ioport, "it.unibo.ioport.Ioport").
  static(ioport).
+  qactor( sonar, ctx_ioport, "it.unibo.sonar.Sonar").
+ static(sonar).
+  qactor( led, ctx_ioport, "it.unibo.led.Led").
+ static(led).
   qactor( webgui, ctx_webgui, "it.unibo.webgui.Webgui").
  static(webgui).
+  qactor( client_esterno, ctx_client_esterno, "it.unibo.client_esterno.Client_esterno").
+ static(client_esterno).
