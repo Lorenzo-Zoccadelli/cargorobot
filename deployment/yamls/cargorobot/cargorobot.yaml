@@ -1,0 +1,22 @@
+services:
+
+  cargorobot:
+    container_name: cargorobot
+    image: cargorobot:1.0
+    ports:
+      - 9092:9092/tcp
+      - 9092:9092/udp
+    networks:
+      - iss-network
+
+
+networks:
+  iss-network:
+    external: true
+
+    
+## yamls> docker network ls
+## docker network create iss-network
+## docker network rm xxx
+## docker-compose -f cargorobot.yaml up
+## docker compose -f cargorobot.yaml up

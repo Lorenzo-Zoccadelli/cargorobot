@@ -35,11 +35,13 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				
 				var LastDestinationX = -1
 				var LastDestinationY = -1
+				
+				val RobotStepTime = 350
 		return { //this:ActionBasciFsm
 				state("init") { //this:State
 					action { //it:State
 						CommUtils.outcyan("$name: STARTING...")
-						request("engage", "engage($MyName,340)" ,"basicrobot" )  
+						request("engage", "engage($MyName,$RobotStepTime)" ,"basicrobot" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -61,6 +63,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("initDone") { //this:State
 					action { //it:State
+						forward("setplanbuildelay", "setplanbuildelay(0)" ,"basicrobot" ) 
 						CommUtils.outcyan("$name: basicrobot engaged correctly")
 						//genTimer( actor, state )
 					}
@@ -104,7 +107,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						
 									LastDestinationX = 4
 									LastDestinationY = 0
-						request("moverobot", "moverobot(4,0,340)" ,"basicrobot" )  
+						request("moverobot", "moverobot(4,0,$RobotStepTime)" ,"basicrobot" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -133,7 +136,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 									LastDestinationX = CurrentSlot!!.getLoadingPosX()
 									LastDestinationY = CurrentSlot!!.getLoadingPosY()
 						CommUtils.outcyan("$name: going to slot ($SlotPosX, $SlotPosY) ($LastDestinationX, $LastDestinationY)...")
-						request("moverobot", "moverobot($LastDestinationX,$LastDestinationY,340)" ,"basicrobot" )  
+						request("moverobot", "moverobot($LastDestinationX,$LastDestinationY,$RobotStepTime)" ,"basicrobot" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -168,10 +171,20 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t011",targetState="waitRequests",cond=whenReply("moverobotdone"))
+					 transition(edgeName="t011",targetState="atHome",cond=whenReply("moverobotdone"))
 					transition(edgeName="t012",targetState="moveFailed",cond=whenReply("moverobotfailed"))
 					transition(edgeName="t013",targetState="serviRichiestaPrimaDiHome",cond=whenRequest("richiestaCaricamentoSlot"))
 					interrupthandle(edgeName="t014",targetState="handleAnomalia",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
+				}	 
+				state("atHome") { //this:State
+					action { //it:State
+						request("tuneAtHome", "tuneAtHome(ok)" ,"basicrobot" )  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t015",targetState="waitRequests",cond=whenReply("tuneDone"))
 				}	 
 				state("serviRichiestaPrimaDiHome") { //this:State
 					action { //it:State
@@ -201,13 +214,13 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t015",targetState="resumeFromAnomalia",cond=whenEvent("risoluzioneAnomalia"))
+					 transition(edgeName="t016",targetState="resumeFromAnomalia",cond=whenEvent("risoluzioneAnomalia"))
 				}	 
 				state("resumeFromAnomalia") { //this:State
 					action { //it:State
 						CommUtils.outcyan("$name: anomalia risolta...")
 						if(  LastDestinationX != -1 && LastDestinationY != -1  
-						 ){request("moverobot", "moverobot($LastDestinationX,$LastDestinationY,340)" ,"basicrobot" )  
+						 ){request("moverobot", "moverobot($LastDestinationX,$LastDestinationY,$RobotStepTime)" ,"basicrobot" )  
 						}
 						returnFromInterrupt(interruptedStateTransitions)
 						//genTimer( actor, state )

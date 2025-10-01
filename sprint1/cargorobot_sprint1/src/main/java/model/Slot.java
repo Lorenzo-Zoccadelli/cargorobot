@@ -26,8 +26,6 @@ public class Slot {
 				JsonUtils.getJsonInt(jsonStr,"posY"),
 				JsonUtils.getJsonInt(jsonStr,"loadingPosX"), 
 				JsonUtils.getJsonInt(jsonStr,"loadingPosY") );
-		System.out.println(jsonStr);
-		System.out.println(this);
 	}
 
 

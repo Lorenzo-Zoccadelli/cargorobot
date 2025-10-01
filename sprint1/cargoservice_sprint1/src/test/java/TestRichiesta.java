@@ -12,7 +12,7 @@ public class TestRichiesta {
     private static IApplMessage answer;
     
     private static String host="localhost";
-    private static String port="8081";
+    private static String port="9091";
     
 
 	public static void main(String[] args) throws Exception {
@@ -29,11 +29,11 @@ public class TestRichiesta {
 		 
 
 		 richiesta = CommUtils.buildRequest(freecaller, "richiestaCarico", 
-				 "richiestaCarico(1)", "cargoservice");
+				 "richiestaCarico(5)", "cargoservice");
 		 ans = conn.request(richiesta);
 		 System.out.println(ans);
 		 
-		 Thread.sleep(5000);
+		 Thread.sleep(1000);
 		 
 
 		 richiesta = CommUtils.buildEvent(freecaller, "containerRilevato", 

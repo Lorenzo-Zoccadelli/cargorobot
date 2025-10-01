@@ -24,4 +24,3 @@ context(ctx_webgui, "localhost",  "TCP", "8084").
  static(ioport).
   qactor( webgui, ctx_webgui, "it.unibo.webgui.Webgui").
  static(webgui).
-

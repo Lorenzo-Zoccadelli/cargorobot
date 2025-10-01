@@ -1,7 +1,7 @@
 services:
  
-  cargoserviceqak:
-    container_name: cargoserviceqak 
+  productservice:
+    container_name: productservice 
     #image: cargoserviceqak:1.0
     image: docker.io/natbodocker/cargoserviceqak:1.0
     environment:
@@ -18,7 +18,7 @@ networks:
     iss-network:
        external: true
 
-## docker-compose -f cargoserviceqak.yaml  up
+## docker-compose -f productservice.yaml  up
 ## yamls> docker network ls
 ## docker network create iss-network
 ## docker network rm xxx

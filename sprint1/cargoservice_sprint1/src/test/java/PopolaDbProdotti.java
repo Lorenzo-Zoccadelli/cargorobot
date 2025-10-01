@@ -30,6 +30,8 @@ public class PopolaDbProdotti {
 		 	salvaProdotto(new Product(1, "prod1", 20));
 		 	salvaProdotto(new Product(2, "prod2", 40));
 		 	salvaProdotto(new Product(3, "prod3", 50));
+		 	salvaProdotto(new Product(4, "prod4", 10));
+		 	salvaProdotto(new Product(5, "prod5", 10));
 		 
 	}
 

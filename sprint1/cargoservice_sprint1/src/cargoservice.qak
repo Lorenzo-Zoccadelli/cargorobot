@@ -45,9 +45,9 @@ Reply		caricamentoFallito : caricamentoFallito(X) for richiestaCaricamentoSlot
 
 
 //CTXs
-Context ctx_productservice	ip[host="127.0.0.1" port=8111]
-Context ctx_cargoservice	ip[host="localhost" port=8081]
-Context ctx_cargorobot		ip[host="127.0.0.1" port=8082]
+Context ctx_productservice	ip[host="productservice" port=8111]
+Context ctx_cargoservice	ip[host="localhost" port=9091]
+Context ctx_cargorobot		ip[host="cargorobot" port=9092]
 
 ExternalQActor productservice context ctx_productservice
 ExternalQActor cargorobot context ctx_cargorobot

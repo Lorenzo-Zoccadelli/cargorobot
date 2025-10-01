@@ -1,0 +1,15 @@
+Per caricare i container su docker:
+
+1) Creare l'immagine docker (una solva volta oppure di nuovo quando cambia il progetto)
+Entrare nella cartella del progetto di cui si vuole fare l'immagine e fare
+
+./gradlew distTar
+docker build -t <nome>:1.0 .
+
+dove <nome> è il nome del progetto, ovvero quello dopo System nella prima riga del qak
+
+2) Entrare nelle varie cartelle dove ci sono i file yaml e lanciare il comando docker-compose giusto
+
+docker-compose -f nomefile.yaml up
+
+NOTA: una volta fatti i container il cargorobot va fatto partire dopo che il basicrobot è partito se no prima non trova il basicrobot e poi non riesce a ingaggiarlo

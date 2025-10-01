@@ -12,7 +12,7 @@ public class TestRichiestaCargoservice {
     private static IApplMessage answer;
     
     private static String host="localhost";
-    private static String port="8081";
+    private static String port="9002";
     
     /*
      * richiestaCarico 			:	richiestaCarico(PID)

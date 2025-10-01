@@ -1,0 +1,20 @@
+services:
+
+  cargoservice:
+    container_name: cargoservice
+    image: cargoservice:1.0
+    ports:
+      - 9091:9091/tcp
+      - 9091:9091/udp
+    networks:
+      - iss-network
+
+
+networks:
+  iss-network:
+    external: true
+
+## yamls> docker network ls
+## docker network create iss-network
+## docker network rm xxx
+## docker-compose -f cargoservice.yaml

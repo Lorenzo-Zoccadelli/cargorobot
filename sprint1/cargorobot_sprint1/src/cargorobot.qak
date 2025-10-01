@@ -18,6 +18,7 @@ Dispatch disengage    : disengage(ARG)
 
 Dispatch setdirection : dir( D )  //D =up|down|left|right
 Dispatch setrobotstate : setpos(X,Y,Dir)
+Dispatch setplanbuildelay: setplanbuildelay(X)
 
 Request  doplan     : doplan( PATH, STEPTIME )
 Reply doplandone    : doplandone( ARG )    for doplan
@@ -31,12 +32,15 @@ Request moverobot    :  moverobot(TARGETX, TARGETY, STEPTIME)
 Reply moverobotdone  :  moverobotok(ARG)                    for moverobot
 Reply moverobotfailed:  moverobotfailed(PLANDONE, PLANTODO) for moverobot
 
+Request tuneAtHome : tuneAtHome(X)
+Reply tuneDone : tuneDone(X) for tuneAtHome
+
 Event alarm           : alarm(X)
 //-----------------------------
 
 
-Context ctx_cargorobot		ip[host="localhost" port=8082]
-Context ctx_basicrobot 		ip[host="127.0.0.1" port=8020]
+Context ctx_cargorobot		ip[host="localhost" port=9092]
+Context ctx_basicrobot 		ip[host="basicrobot" port=8020]
 
 ExternalQActor basicrobot context ctx_basicrobot
 
@@ -48,16 +52,18 @@ QActor cargorobot context ctx_cargorobot{
 		
 		var LastDestinationX = -1
 		var LastDestinationY = -1
+		
+		val RobotStepTime = 350
 	#]
 	
 	/////////////////
 	//INIT
 	/////////////////
-	State init initial{
+	State init initial{	
 		println("$name: STARTING...") color cyan
 		
 		//engage basicrobot
-		request basicrobot -m engage : engage($MyName, 340)
+		request basicrobot -m engage : engage($MyName, $RobotStepTime)
 	}
 	Transition t0
 		whenReply engagedone -> initDone
@@ -70,6 +76,7 @@ QActor cargorobot context ctx_cargorobot{
 	}
 	
 	State initDone{
+		forward basicrobot -m setplanbuildelay : setplanbuildelay(0)
 		println("$name: basicrobot engaged correctly") color cyan
 	}
 	Goto waitRequests
@@ -80,6 +87,8 @@ QActor cargorobot context ctx_cargorobot{
 	//WAIT REQS
 	////////////////////
 	State waitRequests{
+		//I wasn't looking for a project this year
+		
 		[#
 			LastDestinationX = -1
 			LastDestinationY = -1
@@ -112,12 +121,14 @@ QActor cargorobot context ctx_cargorobot{
 	
 	//To IOPort
 	State goToIOPort{
+		//But my cargorobot said I shouldn't fear
+		
 		println("$name: going to IOPort...") color cyan
 		[#
 			LastDestinationX = 4
 			LastDestinationY = 0
 		#]
-		request basicrobot -m moverobot : moverobot(4, 0, 340)
+		request basicrobot -m moverobot : moverobot(4, 0, $RobotStepTime)
 	}
 	Transition t0
 		whenReply moverobotdone -> atIOPort
@@ -131,6 +142,7 @@ QActor cargorobot context ctx_cargorobot{
 		
 	//To Slot
 	State goToSlot{
+		//When I met it I found it a little weird
 		
 		[#
 			val SlotPosX = CurrentSlot!!.getPosX()
@@ -142,7 +154,7 @@ QActor cargorobot context ctx_cargorobot{
 		
 		println("$name: going to slot ($SlotPosX, $SlotPosY) ($LastDestinationX, $LastDestinationY)...") color cyan
 		
-		request basicrobot -m moverobot : moverobot($LastDestinationX, $LastDestinationY, 340)
+		request basicrobot -m moverobot : moverobot($LastDestinationX, $LastDestinationY, $RobotStepTime)
 	}
 	Transition t0
 		whenReply moverobotdone -> atSlot
@@ -156,6 +168,8 @@ QActor cargorobot context ctx_cargorobot{
 	
 	//To Home
 	State goToHome{
+		//But then my QAK would reassure me
+		
 		[#
 			CurrentSlot = null
 		#]
@@ -168,12 +182,17 @@ QActor cargorobot context ctx_cargorobot{
 		request basicrobot -m moverobot : moverobot(0, 0, 340)
 	}
 	Transition t0
-		whenReply moverobotdone -> waitRequests
+		whenReply moverobotdone -> atHome
 		whenReply moverobotfailed -> moveFailed
 		whenRequest richiestaCaricamentoSlot -> serviRichiestaPrimaDiHome
 		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
 	
 	
+	State atHome{
+		request basicrobot -m tuneAtHome : tuneAtHome(ok)
+	}
+	Transition t0
+		whenReply tuneDone -> waitRequests
 	
 	/////////////////////
 	//REQ PRIMA DI RAGGIUNGERE LA HOME
@@ -209,7 +228,7 @@ QActor cargorobot context ctx_cargorobot{
 	State resumeFromAnomalia{
 		println("$name: anomalia risolta...") color cyan
 		if [# LastDestinationX != -1 && LastDestinationY != -1 #]{
-			request basicrobot -m moverobot : moverobot($LastDestinationX, $LastDestinationY, 340)
+			request basicrobot -m moverobot : moverobot($LastDestinationX, $LastDestinationY, $RobotStepTime)
 		}
 		
 		returnFromInterrupt
