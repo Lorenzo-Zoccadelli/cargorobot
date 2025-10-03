@@ -14,12 +14,7 @@ public class TestRichiestaCargoservice {
     private static String host="localhost";
     private static String port="9002";
     
-    /*
-     * richiestaCarico 			:	richiestaCarico(PID)
-Reply		richiestaCaricoAccettata	:	richiestaCaricoAccettata(ESITO) for richiestaCarico
-Reply		richiestaCaricoRifiutata	:	richiestaCaricoRifiutata(ESITO) for richiestaCarico
-     */
-    
+
 	public static void main(String[] args) throws Exception {
 		 try {
 	            CommUtils.outcyan("BasicRobotMovesHelper | connectService Hostname: " + host);

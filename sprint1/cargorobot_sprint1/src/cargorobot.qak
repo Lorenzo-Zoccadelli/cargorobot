@@ -53,7 +53,7 @@ QActor cargorobot context ctx_cargorobot{
 		var LastDestinationX = -1
 		var LastDestinationY = -1
 		
-		val RobotStepTime = 350
+		val RobotStepTime = 342
 	#]
 	
 	/////////////////
@@ -128,11 +128,12 @@ QActor cargorobot context ctx_cargorobot{
 			LastDestinationX = 4
 			LastDestinationY = 0
 		#]
+		delay 1000
 		request basicrobot -m moverobot : moverobot(4, 0, $RobotStepTime)
 	}
 	Transition t0
 		whenReply moverobotdone -> atIOPort
-		whenReply moverobotfailed -> moveFailed
+		//whenReply moverobotfailed -> atIOPort //moveFailed
 		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
 		
 	State atIOPort{
@@ -158,7 +159,7 @@ QActor cargorobot context ctx_cargorobot{
 	}
 	Transition t0
 		whenReply moverobotdone -> atSlot
-		whenReply moverobotfailed -> moveFailed
+		//whenReply moverobotfailed -> atSlot//moveFailed
 		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
 	
 	State atSlot{
@@ -182,8 +183,8 @@ QActor cargorobot context ctx_cargorobot{
 		request basicrobot -m moverobot : moverobot(0, 0, 340)
 	}
 	Transition t0
-		whenReply moverobotdone -> atHome
-		whenReply moverobotfailed -> moveFailed
+		whenReply moverobotdone -> waitRequests
+		//whenReply moverobotfailed -> moveFailed
 		whenRequest richiestaCaricamentoSlot -> serviRichiestaPrimaDiHome
 		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
 	
@@ -198,11 +199,15 @@ QActor cargorobot context ctx_cargorobot{
 	//REQ PRIMA DI RAGGIUNGERE LA HOME
 	/////////////////////
 	State serviRichiestaPrimaDiHome{
+		println("$name: ricevuta una richiesta prima di arrivare alla HOME") color cyan
+		
 		[#
 			LastDestinationX = -1
 			LastDestinationY = -1
 		#]
+		delay 500
 		emit alarm : alarm(0)
+		delay 1000
 		onMsg(richiestaCaricamentoSlot : richiestaCaricamentoSlot(SlotJson)){
 			[#
 				val SlotJson = payloadArg(0).toString()
@@ -210,8 +215,9 @@ QActor cargorobot context ctx_cargorobot{
 			#]
 		}
 	}
-	Goto goToIOPort
-	
+	Transition t0
+		whenReply moverobotfailed -> goToIOPort
+		whenReply moverobotdone -> goToIOPort	
 	
 	
 	

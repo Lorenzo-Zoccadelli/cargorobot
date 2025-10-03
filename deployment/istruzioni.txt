@@ -13,3 +13,4 @@ dove <nome> è il nome del progetto, ovvero quello dopo System nella prima riga 
 docker-compose -f nomefile.yaml up
 
 NOTA: una volta fatti i container il cargorobot va fatto partire dopo che il basicrobot è partito se no prima non trova il basicrobot e poi non riesce a ingaggiarlo
+
