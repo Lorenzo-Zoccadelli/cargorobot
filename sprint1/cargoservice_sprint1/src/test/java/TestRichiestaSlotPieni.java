@@ -6,7 +6,8 @@ import unibo.basicomm23.msg.ProtocolType;
 import unibo.basicomm23.utils.CommUtils;
 import unibo.basicomm23.utils.ConnectionFactory;
 
-public class TestRichiestaPesoMax {
+public class TestRichiestaSlotPieni {
+
 	public static final String freecaller = "unibocaller";
     private static Interaction conn;
     private static IApplMessage answer;
@@ -31,18 +32,19 @@ public class TestRichiestaPesoMax {
 		 ans = conn.request(richiesta);
 		 System.out.println(ans.msgContent());
 		 
-		 for(int i=0; i<4; i++) {
+		 for(int i=0; i<10; i++) {
 			 richiesta = CommUtils.buildRequest(freecaller, "richiestaCarico", 
-					 "richiestaCarico(6)", "cargoservice");
+					 "richiestaCarico(4)", "cargoservice");
 			 ans = conn.request(richiesta);
 			 System.out.println(ans.msgContent());
 			 
 			 Thread.sleep(1000);
 			 
 			 richiesta = CommUtils.buildEvent(freecaller, "containerRilevato", 
-					 "containerRilevato(6)");
+					 "containerRilevato(4)");
 			 conn.forward(richiesta);
 			 Thread.sleep(10000);
 		 }
     }
+
 }
