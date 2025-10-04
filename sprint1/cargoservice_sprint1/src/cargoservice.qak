@@ -61,7 +61,11 @@ QActor cargoservice context ctx_cargoservice {
 	import "main.java.model.*" 
 	
 	[#
-		val MAX_LOAD = 100.0
+		val MAX_LOAD = System.getenv("MAX_LOAD").toIntOrNull() ?: -1
+		if(MAX_LOAD<=0){
+			System.out.println("La variabile d'ambinete MAX_LOAD non è settata correttamente o è un numero <=0")
+			System.exit(1)
+		}
 		var slotMap: SlotMap = CargoSlotMap()
 		var currentProduct: Product? = null
 		var currentSlot: Slot? = null
