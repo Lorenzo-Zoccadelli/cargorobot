@@ -36,7 +36,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				var LastDestinationX = -1
 				var LastDestinationY = -1
 				
-				val RobotStepTime = 342
+				val RobotStepTime = 360
 		return { //this:ActionBasciFsm
 				state("init") { //this:State
 					action { //it:State
@@ -49,7 +49,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					}	 	 
 					 transition(edgeName="t00",targetState="initDone",cond=whenReply("engagedone"))
 					transition(edgeName="t01",targetState="initFailed",cond=whenReply("engagerefused"))
-					interrupthandle(edgeName="t02",targetState="handleAnomalia",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
+					interrupthandle(edgeName="t02",targetState="handleAnomaliaIdle",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("initFailed") { //this:State
 					action { //it:State
@@ -83,7 +83,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					sysaction { //it:State
 					}	 	 
 					 transition(edgeName="t03",targetState="processRichiestaCaricamentoSlot",cond=whenRequest("richiestaCaricamentoSlot"))
-					interrupthandle(edgeName="t04",targetState="handleAnomalia",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
+					interrupthandle(edgeName="t04",targetState="handleAnomaliaIdle",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("processRichiestaCaricamentoSlot") { //this:State
 					action { //it:State
@@ -115,7 +115,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					sysaction { //it:State
 					}	 	 
 					 transition(edgeName="t05",targetState="atIOPort",cond=whenReply("moverobotdone"))
-					interrupthandle(edgeName="t06",targetState="handleAnomalia",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
+					transition(edgeName="t06",targetState="moveFailed",cond=whenReply("moverobotfailed"))
+					interrupthandle(edgeName="t07",targetState="handleAnomaliaMoving",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("atIOPort") { //this:State
 					action { //it:State
@@ -142,8 +143,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t07",targetState="atSlot",cond=whenReply("moverobotdone"))
-					interrupthandle(edgeName="t08",targetState="handleAnomalia",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
+					 transition(edgeName="t08",targetState="atSlot",cond=whenReply("moverobotdone"))
+					interrupthandle(edgeName="t09",targetState="handleAnomaliaMoving",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("atSlot") { //this:State
 					action { //it:State
@@ -170,9 +171,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t09",targetState="waitRequests",cond=whenReply("moverobotdone"))
-					transition(edgeName="t010",targetState="serviRichiestaPrimaDiHome",cond=whenRequest("richiestaCaricamentoSlot"))
-					interrupthandle(edgeName="t011",targetState="handleAnomalia",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
+					 transition(edgeName="t010",targetState="atHome",cond=whenReply("moverobotdone"))
+					transition(edgeName="t011",targetState="moveFailed",cond=whenReply("moverobotfailed"))
+					transition(edgeName="t012",targetState="serviRichiestaPrimaDiHome",cond=whenRequest("richiestaCaricamentoSlot"))
+					interrupthandle(edgeName="t013",targetState="handleAnomaliaMoving",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("atHome") { //this:State
 					action { //it:State
@@ -182,7 +184,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t012",targetState="waitRequests",cond=whenReply("tuneDone"))
+					 transition(edgeName="t014",targetState="waitRequests",cond=whenReply("tuneDone"))
 				}	 
 				state("serviRichiestaPrimaDiHome") { //this:State
 					action { //it:State
@@ -192,7 +194,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 									LastDestinationY = -1
 						delay(500) 
 						emit("alarm", "alarm(0)" ) 
-						delay(1000) 
 						if( checkMsgContent( Term.createTerm("richiestaCaricamentoSlot(SlotJson)"), Term.createTerm("richiestaCaricamentoSlot(SlotJson)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
@@ -203,11 +204,27 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
+				 	 		stateTimer = TimerActor("timer_serviRichiestaPrimaDiHome", 
+				 	 					  scope, context!!, "local_tout_"+name+"_serviRichiestaPrimaDiHome", 2000.toLong() )  //OCT2023
 					}	 	 
-					 transition(edgeName="t013",targetState="goToIOPort",cond=whenReply("moverobotfailed"))
-					transition(edgeName="t014",targetState="goToIOPort",cond=whenReply("moverobotdone"))
+					 transition(edgeName="t015",targetState="goToIOPort",cond=whenTimeout("local_tout_"+name+"_serviRichiestaPrimaDiHome"))   
+					transition(edgeName="t016",targetState="goToIOPort",cond=whenReply("moverobotfailed"))
+					transition(edgeName="t017",targetState="goToIOPort",cond=whenReply("moverobotdone"))
 				}	 
-				state("handleAnomalia") { //this:State
+				state("handleAnomaliaIdle") { //this:State
+					action { //it:State
+						 
+									LastDestinationX = -1 
+									LastDestinationY != -1 
+						CommUtils.outcyan("$name: rilevazione anomalia...")
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="anomaliaInCorso", cond=doswitch() )
+				}	 
+				state("handleAnomaliaMoving") { //this:State
 					action { //it:State
 						CommUtils.outcyan("$name: rilevazione anomalia...")
 						emit("alarm", "alarm(0)" ) 
@@ -216,7 +233,17 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t015",targetState="resumeFromAnomalia",cond=whenEvent("risoluzioneAnomalia"))
+					 transition(edgeName="t018",targetState="anomaliaInCorso",cond=whenReply("moverobotfailed"))
+					transition(edgeName="t019",targetState="anomaliaInCorso",cond=whenReply("moverobotdone"))
+				}	 
+				state("anomaliaInCorso") { //this:State
+					action { //it:State
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t020",targetState="resumeFromAnomalia",cond=whenEvent("risoluzioneAnomalia"))
 				}	 
 				state("resumeFromAnomalia") { //this:State
 					action { //it:State

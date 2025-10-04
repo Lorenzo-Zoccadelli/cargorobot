@@ -26,6 +26,10 @@ public class TestRichiestaPesoMax {
         }
 
 		 IApplMessage richiesta, ans;
+		 richiesta = CommUtils.buildRequest(freecaller, "resetStiva", 
+				 "resetStiva(1)", "cargoservice");
+		 ans = conn.request(richiesta);
+		 System.out.println(ans.msgContent());
 		 
 		 for(int i=0; i<4; i++) {
 			 richiesta = CommUtils.buildRequest(freecaller, "richiestaCarico", 
