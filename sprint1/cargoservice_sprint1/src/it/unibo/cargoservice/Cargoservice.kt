@@ -31,7 +31,11 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-				val MAX_LOAD = 100.0
+				val MAX_LOAD = System.getenv("MAX_LOAD").toIntOrNull() ?: -1
+				if(MAX_LOAD<=0){
+					System.out.println("La variabile d'ambinete MAX_LOAD non è settata correttamente o è un numero <=0")
+					System.exit(1)
+				}
 				var slotMap: SlotMap = CargoSlotMap()
 				var currentProduct: Product? = null
 				var currentSlot: Slot? = null

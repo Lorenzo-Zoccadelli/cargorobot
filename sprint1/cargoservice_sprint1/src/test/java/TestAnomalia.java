@@ -7,7 +7,7 @@ import unibo.basicomm23.utils.CommUtils;
 import unibo.basicomm23.utils.ConnectionFactory;
 
 public class TestAnomalia{
-    public static final String freecaller = "unibocaller";
+	public static final String freecaller = "unibocaller";
     private static Interaction conn;
     private static IApplMessage risposta;
 
@@ -16,7 +16,7 @@ public class TestAnomalia{
 
     public static void main(String[] args) throws Exception {
 
-        // Connessione al servizio
+        // Connessione al servizio cargoservice
         try {
             CommUtils.outcyan("Connessione a cargoservice su " + host + ":" + port);
             conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, host, port);
@@ -25,29 +25,32 @@ public class TestAnomalia{
             System.exit(1);
         }
 
-        //Reset della stiva
+        // Reset della stiva
         IApplMessage richiesta = CommUtils.buildRequest(
                 freecaller, "resetStiva",
                 "resetStiva(1)", "cargoservice");
         risposta = conn.request(richiesta);
         CommUtils.outgreen("Risposta resetStiva: " + risposta.msgContent());
-
-        //Invio richiesta di carico
+        
+        // sistema accetta una richiesta di carico
+        Thread.sleep(2000);
         richiesta = CommUtils.buildRequest(
                 freecaller, "richiestaCarico",
                 "richiestaCarico(6)", "cargoservice");
         risposta = conn.request(richiesta);
         CommUtils.outgreen("Risposta richiestaCarico: " + risposta.msgContent());
 
-        //simuliamo un’anomalia
+        
+
+        //Simuliamo un’anomalia mentre il sistema è in (elaboraRichiesta)
         Thread.sleep(2000);
         IApplMessage anomalia = CommUtils.buildEvent(
                 freecaller, "rilevazioneAnomalia",
                 "rilevazioneAnomalia(101)");
         conn.forward(anomalia);
-        CommUtils.outred("Evento di anomalia INVIATO!");
+        CommUtils.outred("Evento di anomalia INVIATO (sistema in wait_requests)");
 
-        
+        // Risoluzione anomalia
         Thread.sleep(5000);
         IApplMessage risolta = CommUtils.buildEvent(
                 freecaller, "risoluzioneAnomalia",
@@ -55,8 +58,9 @@ public class TestAnomalia{
         conn.forward(risolta);
         CommUtils.outgreen("Evento di risoluzione anomalia INVIATO!");
 
-        //Dopo la risoluzione, simuliamo che il container venga rilevato
-        Thread.sleep(2000);
+        
+        //Container venga rilevato
+        Thread.sleep(8000);
         IApplMessage container = CommUtils.buildEvent(
                 freecaller, "containerRilevato",
                 "containerRilevato(6)");
