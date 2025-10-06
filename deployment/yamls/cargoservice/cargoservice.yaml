@@ -10,6 +10,8 @@ services:
       - iss-network
     environment:
       - MAX_LOAD=100
+    volumes:
+      - ./slotmap.json:/cargoservice-1.0/bin/slotmap.json
 
 networks:
   iss-network:

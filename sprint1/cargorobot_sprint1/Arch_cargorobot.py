@@ -25,12 +25,4 @@ with Diagram('cargorobotArch', show=False, outformat='png', graph_attr=graphattr
   with Cluster('env'):
      sys = Custom('','./qakicons/system.png')
 ### see https://renenyffenegger.ch/notes/tools/Graphviz/attributes/label/HTML-like/index
-     with Cluster('ctx_cargorobot', graph_attr=nodeattr):
-          cargorobot=Custom('cargorobot','./qakicons/symActorWithobjSmall.png')
-     with Cluster('ctx_basicrobot', graph_attr=nodeattr):
-          basicrobot=Custom('basicrobot(ext)','./qakicons/externalQActor.png')
-     cargorobot >> Edge( label='alarm', **eventedgeattr, decorate='true', fontcolor='red') >> sys
-     sys >> Edge( label='risoluzioneAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> cargorobot
-     cargorobot >> Edge(color='magenta', style='solid', decorate='true', label='<engage<font color="darkgreen"> engagedone engagerefused</font> &nbsp; moverobot<font color="darkgreen"> moverobotdone moverobotfailed</font> &nbsp; tuneAtHome<font color="darkgreen"> tuneDone</font> &nbsp; >',  fontcolor='magenta') >> basicrobot
-     cargorobot >> Edge(color='blue', style='solid',  decorate='true', label='<setplanbuildelay &nbsp; >',  fontcolor='blue') >> basicrobot
 diag
