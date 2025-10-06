@@ -1,4 +1,4 @@
-package test.java;
+package test.java.integration;
 
 import unibo.basicomm23.interfaces.IApplMessage;
 import unibo.basicomm23.interfaces.Interaction;
@@ -6,7 +6,7 @@ import unibo.basicomm23.msg.ProtocolType;
 import unibo.basicomm23.utils.CommUtils;
 import unibo.basicomm23.utils.ConnectionFactory;
 
-public class TestRichiestaInesistente {
+public class TestRichiesta {
 	public static final String freecaller = "unibocaller";
     private static Interaction conn;
     private static IApplMessage answer;
@@ -27,9 +27,14 @@ public class TestRichiestaInesistente {
 
 		 IApplMessage richiesta, ans;
 		 
+		 richiesta = CommUtils.buildRequest(freecaller, "resetStiva", 
+				 "resetStiva(1)", "cargoservice");
+		 ans = conn.request(richiesta);
+		 System.out.println(ans.msgContent());
 
+		 
 		 richiesta = CommUtils.buildRequest(freecaller, "richiestaCarico", 
-				 "richiestaCarico(99)", "cargoservice");
+				 "richiestaCarico(5)", "cargoservice");
 		 ans = conn.request(richiesta);
 		 System.out.println(ans);
 		 
@@ -37,7 +42,7 @@ public class TestRichiestaInesistente {
 		 
 
 		 richiesta = CommUtils.buildEvent(freecaller, "containerRilevato", 
-				 "containerRilevato(99)");
+				 "containerRilevato(1)");
 		 conn.forward(richiesta);
 		 
 	}

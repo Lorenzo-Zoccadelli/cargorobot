@@ -1,4 +1,4 @@
-package test.java;
+package test.java.integration;
 
 import unibo.basicomm23.interfaces.IApplMessage;
 import unibo.basicomm23.interfaces.Interaction;
@@ -6,7 +6,7 @@ import unibo.basicomm23.msg.ProtocolType;
 import unibo.basicomm23.utils.CommUtils;
 import unibo.basicomm23.utils.ConnectionFactory;
 
-public class TestAnomalia{
+public class TestAnomalia1{
 	public static final String freecaller = "unibocaller";
     private static Interaction conn;
     private static IApplMessage risposta;

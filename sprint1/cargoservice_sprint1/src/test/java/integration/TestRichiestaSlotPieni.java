@@ -1,4 +1,4 @@
-package test.java;
+package test.java.integration;
 
 import unibo.basicomm23.interfaces.IApplMessage;
 import unibo.basicomm23.interfaces.Interaction;

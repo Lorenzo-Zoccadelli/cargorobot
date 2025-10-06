@@ -7,6 +7,13 @@ Reply		caricamentoFallito : caricamentoFallito(X) for richiestaCaricamentoSlot
 Event		rilevazioneAnomalia			:	rilevazioneAnomalia(X)
 Event		risoluzioneAnomalia			:	risoluzioneAnomalia(X)
  
+ 
+/////////////////////////
+// INTERNI
+/////////////////////////
+//Dispatch	risoluzioneAnomaliaVeloce	: risoluzioneAnomaliaVeloce(X)
+ 
+ 
 //-----------------------------
 // MESSAGGI PER BASICROBOT
 //-----------------------------
@@ -238,6 +245,8 @@ QActor cargorobot context ctx_cargorobot{
 		emit alarm : alarm(0)
 	}
 	Transition t0
+		whenTime 2000 -> anomaliaInCorso
+		whenEvent risoluzioneAnomalia -> risoluzioneAnomaliaPrimaDiRisposta
 		whenReply moverobotfailed -> anomaliaInCorso
 		whenReply moverobotdone -> anomaliaInCorso	
 	
@@ -246,6 +255,14 @@ QActor cargorobot context ctx_cargorobot{
 	}
 	Transition t0
 		whenEvent risoluzioneAnomalia -> resumeFromAnomalia
+	
+	State risoluzioneAnomaliaPrimaDiRisposta{
+		
+	}
+	Transition t0
+		whenTime 2000 -> resumeFromAnomalia
+		whenReply moverobotfailed -> resumeFromAnomalia
+		whenReply moverobotdone -> resumeFromAnomalia	
 	
 	State resumeFromAnomalia{
 		println("$name: anomalia risolta...") color cyan

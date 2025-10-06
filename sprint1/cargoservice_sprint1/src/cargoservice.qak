@@ -122,7 +122,7 @@ QActor cargoservice context ctx_cargoservice {
 			if[# currentProduct!!.getProductId() <= 0 #]{	//ERRORE
 				println("$name: il prodotto richiesto non esiste") color red
 				[# val Esito = "'Prodotto non esistente'"#]
-				replyTo richiestaCarico with richiestaCaricoAccettata : richiestaCaricoAccettata($Esito)
+				replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata($Esito)
 				autodispatch endLocal : endLocal(0)
 			}
 		}
@@ -141,14 +141,14 @@ QActor cargoservice context ctx_cargoservice {
 		if[# !slotMap!!.isAnySlotEmpty() #]{
 			println("$name: richiesta rifiutata, nessuno slot disponibile") color red
 			[# val Esito = "'Nessuno slot disponibile'"#]
-			replyTo richiestaCarico with richiestaCaricoAccettata : richiestaCaricoAccettata($Esito)
+			replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata($Esito)
 			autodispatch endLocal : endLocal(0)
 		}
 		else {
 			if[# slotMap!!.getTotalWeight() + currentProduct!!.getWeight() > MAX_LOAD #]{
 				println("$name: richiesta rifiutata, peso eccessivo") color red
 				[# val Esito = "'Il prodotto eccede il peso massimo della stiva'"#]
-				replyTo richiestaCarico with richiestaCaricoAccettata : richiestaCaricoAccettata($Esito)
+				replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata($Esito)
 				autodispatch endLocal : endLocal(0)
 			}
 			else{
@@ -178,6 +178,7 @@ QActor cargoservice context ctx_cargoservice {
 	}
 	Transition t0
 		whenEvent containerRilevato -> caricaProdotto
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
 	
 	
 	////////////////////

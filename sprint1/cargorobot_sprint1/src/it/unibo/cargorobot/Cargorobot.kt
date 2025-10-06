@@ -232,9 +232,13 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
+				 	 		stateTimer = TimerActor("timer_handleAnomaliaMoving", 
+				 	 					  scope, context!!, "local_tout_"+name+"_handleAnomaliaMoving", 2000.toLong() )  //OCT2023
 					}	 	 
-					 transition(edgeName="t018",targetState="anomaliaInCorso",cond=whenReply("moverobotfailed"))
-					transition(edgeName="t019",targetState="anomaliaInCorso",cond=whenReply("moverobotdone"))
+					 transition(edgeName="t018",targetState="anomaliaInCorso",cond=whenTimeout("local_tout_"+name+"_handleAnomaliaMoving"))   
+					transition(edgeName="t019",targetState="risoluzioneAnomaliaPrimaDiRisposta",cond=whenEvent("risoluzioneAnomalia"))
+					transition(edgeName="t020",targetState="anomaliaInCorso",cond=whenReply("moverobotfailed"))
+					transition(edgeName="t021",targetState="anomaliaInCorso",cond=whenReply("moverobotdone"))
 				}	 
 				state("anomaliaInCorso") { //this:State
 					action { //it:State
@@ -243,7 +247,20 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t020",targetState="resumeFromAnomalia",cond=whenEvent("risoluzioneAnomalia"))
+					 transition(edgeName="t022",targetState="resumeFromAnomalia",cond=whenEvent("risoluzioneAnomalia"))
+				}	 
+				state("risoluzioneAnomaliaPrimaDiRisposta") { //this:State
+					action { //it:State
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+				 	 		stateTimer = TimerActor("timer_risoluzioneAnomaliaPrimaDiRisposta", 
+				 	 					  scope, context!!, "local_tout_"+name+"_risoluzioneAnomaliaPrimaDiRisposta", 2000.toLong() )  //OCT2023
+					}	 	 
+					 transition(edgeName="t023",targetState="resumeFromAnomalia",cond=whenTimeout("local_tout_"+name+"_risoluzioneAnomaliaPrimaDiRisposta"))   
+					transition(edgeName="t024",targetState="resumeFromAnomalia",cond=whenReply("moverobotfailed"))
+					transition(edgeName="t025",targetState="resumeFromAnomalia",cond=whenReply("moverobotdone"))
 				}	 
 				state("resumeFromAnomalia") { //this:State
 					action { //it:State
