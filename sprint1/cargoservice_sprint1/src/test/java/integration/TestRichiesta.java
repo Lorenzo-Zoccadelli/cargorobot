@@ -1,4 +1,4 @@
-package test.java;
+package test.java.integration;
 
 import unibo.basicomm23.interfaces.IApplMessage;
 import unibo.basicomm23.interfaces.Interaction;
@@ -6,13 +6,13 @@ import unibo.basicomm23.msg.ProtocolType;
 import unibo.basicomm23.utils.CommUtils;
 import unibo.basicomm23.utils.ConnectionFactory;
 
-public class TestRichiestaCargoservice {
+public class TestRichiesta {
 	public static final String freecaller = "unibocaller";
     private static Interaction conn;
     private static IApplMessage answer;
     
     private static String host="localhost";
-    private static String port="9002";
+    private static String port="9091";
     
 
 	public static void main(String[] args) throws Exception {
@@ -27,11 +27,23 @@ public class TestRichiestaCargoservice {
 
 		 IApplMessage richiesta, ans;
 		 
-
-		 richiesta = CommUtils.buildRequest(freecaller, "richiestaCarico", "richiestaCarico(1)", "cargoservice");
+		 richiesta = CommUtils.buildRequest(freecaller, "resetStiva", 
+				 "resetStiva(1)", "cargoservice");
 		 ans = conn.request(richiesta);
+		 System.out.println(ans.msgContent());
+
 		 
+		 richiesta = CommUtils.buildRequest(freecaller, "richiestaCarico", 
+				 "richiestaCarico(5)", "cargoservice");
+		 ans = conn.request(richiesta);
 		 System.out.println(ans);
+		 
+		 Thread.sleep(1000);
+		 
+
+		 richiesta = CommUtils.buildEvent(freecaller, "containerRilevato", 
+				 "containerRilevato(1)");
+		 conn.forward(richiesta);
 		 
 	}
 }

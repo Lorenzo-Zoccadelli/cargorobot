@@ -15,6 +15,8 @@ reply( getProductAnswer, product(JSonString) ).  %%for getProduct
 request( richiestaCaricamentoSlot, richiestaCaricamentoSlot(TARGETX,TARGETY) ).
 reply( slotCaricato, slotCaricato(X) ).  %%for richiestaCaricamentoSlot
 reply( caricamentoFallito, caricamentoFallito(X) ).  %%for richiestaCaricamentoSlot
+request( resetStiva, resetStiva(X) ).
+reply( esitoResetStiva, esitoResetStiva(X) ).  %%for resetStiva
 %====================================================================================
 context(ctx_productservice, "productservice",  "TCP", "8111").
 context(ctx_cargoservice, "localhost",  "TCP", "9091").

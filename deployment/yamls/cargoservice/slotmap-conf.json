@@ -1,0 +1,32 @@
+{
+  "slots": [
+    {
+        "name": "Slot1",
+        "posX": 1,
+        "posY": 1,
+        "loadingPosX": 1,
+        "loadingPosY": 0
+    },
+    {
+        "name": "Slot2",
+        "posX": 3,
+        "posY": 1,
+        "loadingPosX": 3,
+        "loadingPosY": 0
+    },
+    {
+        "name": "Slot1",
+        "posX": 1,
+        "posY": 4,
+        "loadingPosX": 1,
+        "loadingPosY": 5
+    },
+    {
+        "name": "Slot1",
+        "posX": 3,
+        "posY": 4,
+        "loadingPosX": 3,
+        "loadingPosY": 5
+    }
+  ]
+}

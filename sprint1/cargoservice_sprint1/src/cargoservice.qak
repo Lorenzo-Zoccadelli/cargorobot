@@ -43,6 +43,11 @@ Reply		slotCaricato : slotCaricato(X) for richiestaCaricamentoSlot
 Reply		caricamentoFallito : caricamentoFallito(X) for richiestaCaricamentoSlot
 
 
+////////////////////
+//PER TEST
+////////////////////
+Request		resetStiva				: resetStiva(X)
+Reply		esitoResetStiva			: esitoResetStiva(X) for resetStiva
 
 //CTXs
 Context ctx_productservice	ip[host="productservice" port=8111]
@@ -54,10 +59,22 @@ ExternalQActor cargorobot context ctx_cargorobot
 
 QActor cargoservice context ctx_cargoservice {	
 	import "main.java.model.*" 
+	import "java.io.IOException"
 	
 	[#
-		val MAX_LOAD = 100.0
-		val slotMap: SlotMap = CargoSlotMap()
+		val MAX_LOAD = System.getenv("MAX_LOAD").toIntOrNull() ?: -1
+		if(MAX_LOAD<=0){
+			System.out.println("La variabile d'ambinete MAX_LOAD non è settata correttamente o è un numero <=0")
+			System.exit(1)
+		}
+		
+		var slotMap: SlotMap? = null
+		try{
+			slotMap = CargoSlotMap("slotmap-conf.json")
+		}
+		catch(e: IOException){
+			System.exit(1)
+		}
 		var currentProduct: Product? = null
 		var currentSlot: Slot? = null
 	#]
@@ -76,6 +93,7 @@ QActor cargoservice context ctx_cargoservice {
 	}
 	Transition t0
 		whenRequest richiestaCarico -> elaboraRichiesta
+		whenRequest resetStiva -> handleResetStiva
 		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
 		
 	///////////////////
@@ -103,8 +121,8 @@ QActor cargoservice context ctx_cargoservice {
 			
 			if[# currentProduct!!.getProductId() <= 0 #]{	//ERRORE
 				println("$name: il prodotto richiesto non esiste") color red
-				[# val Esito = "Prodotto non esistente"#]
-				replyTo richiestaCarico with richiestaCaricoAccettata : richiestaCaricoAccettata($Esito)
+				[# val Esito = "'Prodotto non esistente'"#]
+				replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata($Esito)
 				autodispatch endLocal : endLocal(0)
 			}
 		}
@@ -120,24 +138,24 @@ QActor cargoservice context ctx_cargoservice {
 	////////////////////
 	State assegnamentoSlot{
 		println("$name: recuperati i dati del prodotto") color red
-		if[# !slotMap.isAnySlotEmpty() #]{
+		if[# !slotMap!!.isAnySlotEmpty() #]{
 			println("$name: richiesta rifiutata, nessuno slot disponibile") color red
-			[# val Esito = "Nessuno slot disponibile"#]
-			replyTo richiestaCarico with richiestaCaricoAccettata : richiestaCaricoAccettata($Esito)
+			[# val Esito = "'Nessuno slot disponibile'"#]
+			replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata($Esito)
 			autodispatch endLocal : endLocal(0)
 		}
 		else {
-			if[# slotMap.getTotalWeight() + currentProduct!!.getWeight() > MAX_LOAD #]{
+			if[# slotMap!!.getTotalWeight() + currentProduct!!.getWeight() > MAX_LOAD #]{
 				println("$name: richiesta rifiutata, peso eccessivo") color red
-				[# val Esito = "Il prodotto eccede il peso massimo della stiva"#]
-				replyTo richiestaCarico with richiestaCaricoAccettata : richiestaCaricoAccettata($Esito)
+				[# val Esito = "'Il prodotto eccede il peso massimo della stiva'"#]
+				replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata($Esito)
 				autodispatch endLocal : endLocal(0)
 			}
 			else{
 				[# 
-					currentSlot = slotMap.getFirstEmptySlot()
-					slotMap.putProductIntoSlot(currentSlot, currentProduct)
-					val Esito = "OK"
+					currentSlot = slotMap!!.getFirstEmptySlot()
+					slotMap!!.putProductIntoSlot(currentSlot, currentProduct)
+					val Esito = "'OK'"
 				#]
 				println("$name: prodotto assegnato allo slot $currentSlot") color red
 				replyTo richiestaCarico with richiestaCaricoAccettata : richiestaCaricoAccettata($Esito)
@@ -160,6 +178,7 @@ QActor cargoservice context ctx_cargoservice {
 	}
 	Transition t0
 		whenEvent containerRilevato -> caricaProdotto
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
 	
 	
 	////////////////////
@@ -202,5 +221,16 @@ QActor cargoservice context ctx_cargoservice {
 		println("$name: anomalia risolta...") color red
 		returnFromInterrupt
 	}
+	
+	
+	/////////////////////
+	//PER TEST
+	/////////////////////
+	State handleResetStiva{
+		[# slotMap = CargoSlotMap() #]
+		replyTo resetStiva with esitoResetStiva : esitoResetStiva(0)
+	}
+	Goto wait_requests
+	
 		
 }

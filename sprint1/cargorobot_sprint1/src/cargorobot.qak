@@ -7,6 +7,13 @@ Reply		caricamentoFallito : caricamentoFallito(X) for richiestaCaricamentoSlot
 Event		rilevazioneAnomalia			:	rilevazioneAnomalia(X)
 Event		risoluzioneAnomalia			:	risoluzioneAnomalia(X)
  
+ 
+/////////////////////////
+// INTERNI
+/////////////////////////
+//Dispatch	risoluzioneAnomaliaVeloce	: risoluzioneAnomaliaVeloce(X)
+ 
+ 
 //-----------------------------
 // MESSAGGI PER BASICROBOT
 //-----------------------------
@@ -53,7 +60,7 @@ QActor cargorobot context ctx_cargorobot{
 		var LastDestinationX = -1
 		var LastDestinationY = -1
 		
-		val RobotStepTime = 342
+		val RobotStepTime = 360
 	#]
 	
 	/////////////////
@@ -68,7 +75,7 @@ QActor cargorobot context ctx_cargorobot{
 	Transition t0
 		whenReply engagedone -> initDone
 		whenReply engagerefused -> initFailed
-		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomaliaIdle
 	
 	State initFailed{
 		println("$name: basicrobot engaging problem... shutting down") color cyan
@@ -101,7 +108,7 @@ QActor cargorobot context ctx_cargorobot{
 	}
 	Transition t0
 		whenRequest richiestaCaricamentoSlot -> processRichiestaCaricamentoSlot
-		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomaliaIdle
 	
 	State processRichiestaCaricamentoSlot{
 		onMsg(richiestaCaricamentoSlot : richiestaCaricamentoSlot(SlotJson)){
@@ -133,8 +140,8 @@ QActor cargorobot context ctx_cargorobot{
 	}
 	Transition t0
 		whenReply moverobotdone -> atIOPort
-		//whenReply moverobotfailed -> atIOPort //moveFailed
-		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+		whenReply moverobotfailed -> moveFailed
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomaliaMoving
 		
 	State atIOPort{
 		delay 2000
@@ -160,7 +167,7 @@ QActor cargorobot context ctx_cargorobot{
 	Transition t0
 		whenReply moverobotdone -> atSlot
 		//whenReply moverobotfailed -> atSlot//moveFailed
-		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomaliaMoving
 	
 	State atSlot{
 		delay 2000
@@ -183,10 +190,10 @@ QActor cargorobot context ctx_cargorobot{
 		request basicrobot -m moverobot : moverobot(0, 0, 340)
 	}
 	Transition t0
-		whenReply moverobotdone -> waitRequests
-		//whenReply moverobotfailed -> moveFailed
+		whenReply moverobotdone -> atHome
+		whenReply moverobotfailed -> moveFailed
 		whenRequest richiestaCaricamentoSlot -> serviRichiestaPrimaDiHome
-		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomaliaMoving
 	
 	
 	State atHome{
@@ -207,7 +214,6 @@ QActor cargorobot context ctx_cargorobot{
 		#]
 		delay 500
 		emit alarm : alarm(0)
-		delay 1000
 		onMsg(richiestaCaricamentoSlot : richiestaCaricamentoSlot(SlotJson)){
 			[#
 				val SlotJson = payloadArg(0).toString()
@@ -216,6 +222,7 @@ QActor cargorobot context ctx_cargorobot{
 		}
 	}
 	Transition t0
+		whenTime 2000 -> goToIOPort	//caso raro in cui l'alarm arrivi al basicrobot mentre sta calcolando il percorso e perciò non risponda
 		whenReply moverobotfailed -> goToIOPort
 		whenReply moverobotdone -> goToIOPort	
 	
@@ -224,12 +231,38 @@ QActor cargorobot context ctx_cargorobot{
 	/////////////////////
 	//GESTIONE MALFUNZIONAMENTO
 	/////////////////////
-	State handleAnomalia{
+	State handleAnomaliaIdle{
+		[# 
+			LastDestinationX = -1 
+			LastDestinationY != -1 
+		#]
+		println("$name: rilevazione anomalia...") color cyan
+	}
+	Goto anomaliaInCorso
+	
+	State handleAnomaliaMoving{
 		println("$name: rilevazione anomalia...") color cyan
 		emit alarm : alarm(0)
 	}
 	Transition t0
+		whenTime 2000 -> anomaliaInCorso
+		whenEvent risoluzioneAnomalia -> risoluzioneAnomaliaPrimaDiRisposta
+		whenReply moverobotfailed -> anomaliaInCorso
+		whenReply moverobotdone -> anomaliaInCorso	
+	
+	State anomaliaInCorso{
+		
+	}
+	Transition t0
 		whenEvent risoluzioneAnomalia -> resumeFromAnomalia
+	
+	State risoluzioneAnomaliaPrimaDiRisposta{
+		
+	}
+	Transition t0
+		whenTime 2000 -> resumeFromAnomalia
+		whenReply moverobotfailed -> resumeFromAnomalia
+		whenReply moverobotdone -> resumeFromAnomalia	
 	
 	State resumeFromAnomalia{
 		println("$name: anomalia risolta...") color cyan
