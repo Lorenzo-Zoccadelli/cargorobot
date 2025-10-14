@@ -201,6 +201,7 @@ tasks.register('copyReport', Copy) {
 
 
 tasks.named("run", JavaExec) {
+	environment "PYTHON_CMD", project.findProperty("PYTHON_CMD")
 	environment "SONAR_SCRIPT_PATH", project.findProperty("SONAR_SCRIPT_PATH")
 	environment "LED_OFF_SCRIPT_PATH", project.findProperty("LED_OFF_SCRIPT_PATH")
     environment "LED_ON_SCRIPT_PATH", project.findProperty("LED_ON_SCRIPT_PATH")

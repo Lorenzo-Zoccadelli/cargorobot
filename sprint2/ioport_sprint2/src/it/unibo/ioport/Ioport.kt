@@ -29,6 +29,7 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		 var contatore = 0  
 		return { //this:ActionBasciFsm
 				state("init") { //this:State
 					action { //it:State
@@ -39,7 +40,7 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 					sysaction { //it:State
 					}	 	 
 				}	 
-				state("waitEvents") { //this:State
+				state("ioportVuota") { //this:State
 					action { //it:State
 						CommUtils.outyellow("$name: aspettando che accada qualcosa...")
 						//genTimer( actor, state )
@@ -47,39 +48,96 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t00",targetState="containerRilevato",cond=whenEvent("rilDistContainer"))
-					transition(edgeName="t01",targetState="anomalia",cond=whenEvent("rilDistAnomalia"))
+					 transition(edgeName="t00",targetState="resetPerContainer",cond=whenEvent("rilDistContainer"))
+					transition(edgeName="t01",targetState="resetPerAnomalia",cond=whenEvent("rilDistAnomalia"))
+				}	 
+				state("resetPerContainer") { //this:State
+					action { //it:State
+						 contatore = 0  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="checkContainer", cond=doswitch() )
+				}	 
+				state("checkContainer") { //this:State
+					action { //it:State
+						 contatore += 1  
+						if(  contatore == 3  
+						 ){ contatore = 0  
+						emit("containerRilevato", "containerRilevato(1)" ) 
+						forward("continue", "continue(1)" ,name ) 
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t02",targetState="containerRilevato",cond=whenDispatch("continue"))
+					transition(edgeName="t03",targetState="checkContainer",cond=whenEvent("rilDistContainer"))
+					transition(edgeName="t04",targetState="resetPerAnomalia",cond=whenEvent("rilDistAnomalia"))
+					transition(edgeName="t05",targetState="ioportVuota",cond=whenEvent("rilDistVuoto"))
 				}	 
 				state("containerRilevato") { //this:State
 					action { //it:State
-						emit("containerRilevato", "containerRilevato(1)" ) 
+						CommUtils.outyellow("$name: aspettando che accada qualcosa...")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="waitEvents", cond=doswitch() )
+					 transition(edgeName="t06",targetState="resetPerAnomalia",cond=whenEvent("rilDistAnomalia"))
+					transition(edgeName="t07",targetState="ioportVuota",cond=whenEvent("rilDistVuoto"))
+				}	 
+				state("resetPerAnomalia") { //this:State
+					action { //it:State
+						 contatore = 0  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="checkAnomalia", cond=doswitch() )
+				}	 
+				state("checkAnomalia") { //this:State
+					action { //it:State
+						 contatore += 1  
+						if(  contatore == 3  
+						 ){ contatore = 0  
+						emit("rilevazioneAnomalia", "rilevazioneAnomalia(1)" ) 
+						forward("continue", "continue(1)" ,name ) 
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t08",targetState="anomalia",cond=whenDispatch("continue"))
+					transition(edgeName="t09",targetState="resetPerContainer",cond=whenEvent("rilDistContainer"))
+					transition(edgeName="t010",targetState="checkAnomalia",cond=whenEvent("rilDistAnomalia"))
+					transition(edgeName="t011",targetState="ioportVuota",cond=whenEvent("rilDistVuoto"))
 				}	 
 				state("anomalia") { //this:State
 					action { //it:State
-						emit("rilevazioneAnomalia", "rilevazioneAnomalia(1)" ) 
-						forward("accesioneLed", "accesioneLed(1)" ,"led" ) 
+						CommUtils.outyellow("$name: anomalia in corso")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t02",targetState="fineAnomalia",cond=whenEvent("rilDistFineAnomalia"))
+					 transition(edgeName="t012",targetState="fineAnomalia",cond=whenEvent("rilDistVuoto"))
 				}	 
 				state("fineAnomalia") { //this:State
 					action { //it:State
+						CommUtils.outyellow("$name: fine anomalia")
 						emit("risoluzioneAnomalia", "risoluzioneAnomalia(1)" ) 
-						forward("spegnimentoLed", "spegnimentoLed(1)" ,"led" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition( edgeName="goto",targetState="ioportVuota", cond=doswitch() )
 				}	 
 			}
 		}

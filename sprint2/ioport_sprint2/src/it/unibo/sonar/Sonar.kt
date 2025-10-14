@@ -19,37 +19,21 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
-import java.io.*
 
 class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
 
 	override fun getInitialState() : String{
-		return "init"
+		return "initi"
 	}
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-				val PYTHON_CMD = System.getenv("PYTHON_CMD") ?: ""
-				if(PYTHON_CMD.equals("")){
-					System.out.println("La variabile d'ambiente PYTHON_CMD non è impostata")
-					System.exit(1)
-				}
-				
-				val SONAR_SCRIPT_PATH = System.getenv("LED_ON_SCRIPT_PATH") ?: ""
-				if(SONAR_SCRIPT_PATH.equals("")){
-					System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH non è impostata")
-					System.exit(1)
-				}
-				
-				if(!File(SONAR_SCRIPT_PATH).isFile()){
-					System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH contiene un percorso inesistente")
-					System.exit(1)
-				}
-				
+				DFREE = 11
+				var D = 0.0	
 		return { //this:ActionBasciFsm
-				state("init") { //this:State
+				state("initi") { //this:State
 					action { //it:State
 						CommUtils.outyellow("$name: STARTING...")
 						//genTimer( actor, state )
@@ -57,6 +41,32 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition(edgeName="t013",targetState="waitMisurazioni",cond=whenEvent("rilevazioneDistanza"))
+				}	 
+				state("waitMisurazioni") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("rilevazioneDistanza(X)"), Term.createTerm("rilevazioneDistanza(X)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								
+												D = payloadArg(0).toDouble()
+								if(  D <= DFREE/2  
+								 ){emitLocalStreamEvent("rilDistContainer", "rilDistContainer(1)" ) 
+								}
+								else
+								 {if(  D > DFREE  
+								  ){emitLocalStreamEvent("rilDistAnomalia", "rilDistAnomalia(1)" ) 
+								 }
+								 else
+								  {emitLocalStreamEvent("rilDistVuoto", "rilDistVuoto(1)" ) 
+								  }
+								 }
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t014",targetState="waitMisurazioni",cond=whenEvent("rilevazioneDistanza"))
 				}	 
 			}
 		}

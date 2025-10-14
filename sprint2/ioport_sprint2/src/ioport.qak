@@ -4,20 +4,27 @@ System ioport
 Dispatch 	accesioneLed 			:	accesioneLed(X)
 Dispatch 	spegnimentoLed 			:	spegnimentoLed(X)
 
+Event		rilevazioneDistanza		:	rilevazioneDistanza(X)
 Event		rilDistContainer		:	rilDistContainer(X)
 Event		rilDistAnomalia			:	rilDistAnomalia(X)
-Event		rilDistFineAnomalia		:	rilDistFineAnomalia(X)
-
+Event		rilDistVuoto			:	rilDistFineAnomalia(X)
+  
 ///////////////////
 //MALFUNZIONAMENTO
 ///////////////////
 Event		rilevazioneAnomalia			:	rilevazioneAnomalia(X)
 Event		risoluzioneAnomalia			:	risoluzioneAnomalia(X)
-           
+            
 //////////////////
 //RILEVAZIONE CONTAINER
 //////////////////
 Event 		containerRilevato			:	containerRilevato(X)
+
+//INTERNI
+Dispatch 	continue : continue(X)
+Dispatch    rilCont : rilCont(X)
+Dispatch	rilFree : rilFree(X)
+Dispatch	rilMal	: rilMal(X)
 
 //Context ctx_cargoservice	ip[host="cargoservice" port=9091]
 //Context ctx_cargorobot		ip[host="cargorobot" port=9092]
@@ -25,38 +32,123 @@ Context ctx_ioport			ip[host="localhost" port=9093]
 
 
 QActor ioport context ctx_ioport{
+	
+	[# var contatore = 0 #]
+	
 	State init initial{
 		println("$name: STARTING...") color yellow
 	}
 	
-	State waitEvents{
+	State ioportVuota{
 		println("$name: aspettando che accada qualcosa...") color yellow
 	}
 	Transition t0
-		whenEvent rilDistContainer -> containerRilevato
-		whenEvent rilDistAnomalia -> anomalia
+		whenEvent rilDistContainer -> resetPerContainer
+		whenEvent rilDistAnomalia -> resetPerAnomalia
 	
-	State containerRilevato{
-		emit containerRilevato : containerRilevato(1)
+	
+	
+	State resetPerContainer{
+		[# contatore = 0 #]
 	}
-	Goto waitEvents
+	Goto checkContainer
 	
-	State anomalia{
-		emit rilevazioneAnomalia : rilevazioneAnomalia(1)
-		forward led -m accesioneLed : accesioneLed(1)
+	State checkContainer{
+		[# contatore += 1 #]
+		if [# contatore == 3 #]{
+			[# contatore = 0 #]
+			emit containerRilevato : containerRilevato(1)
+			autodispatch continue : continue(1)
+		}
 	}
 	Transition t0
-		whenEvent rilDistFineAnomalia -> fineAnomalia
+		whenMsg continue -> containerRilevato
+		whenEvent rilDistContainer -> checkContainer
+		whenEvent rilDistAnomalia -> resetPerAnomalia
+		whenEvent rilDistVuoto -> ioportVuota
+		
+	State containerRilevato{
+		println("$name: aspettando che accada qualcosa...") color yellow
+	}
+	Transition t0
+		whenEvent rilDistAnomalia -> resetPerAnomalia
+		whenEvent rilDistVuoto -> ioportVuota
+	
+	
+	State resetPerAnomalia{
+		[# contatore = 0 #]
+	}
+	Goto checkAnomalia
+	
+	State checkAnomalia{
+		[# contatore += 1 #]
+		if [# contatore == 3 #]{
+			[# contatore = 0 #]
+			emit rilevazioneAnomalia : rilevazioneAnomalia(1)
+			autodispatch continue : continue(1)
+		}
+	}
+	Transition t0
+		whenMsg continue -> anomalia
+		whenEvent rilDistContainer -> resetPerContainer
+		whenEvent rilDistAnomalia -> checkAnomalia
+		whenEvent rilDistVuoto -> ioportVuota
+	
+	State anomalia{
+		println("$name: anomalia in corso") color yellow
+	}
+	Transition t0
+		whenEvent rilDistVuoto -> fineAnomalia
 		
 	State fineAnomalia{
+		println("$name: fine anomalia") color yellow
 		emit risoluzioneAnomalia : risoluzioneAnomalia(1)
-		forward led -m spegnimentoLed : spegnimentoLed(1)
 	}
+	Goto ioportVuota
 	
 }
 
 QActor sonar context ctx_ioport{
+	
+	[#
+		DFREE = 11
+		var D = 0.0	
+	#]
+	
+	State initi initial{
+		println("$name: STARTING...") color yellow
+	}
+	Transition t0
+		whenEvent rilevazioneDistanza -> waitMisurazioni
+	
+	State waitMisurazioni {
+		onMsg(rilevazioneDistanza : rilevazioneDistanza(X)){
+			[#
+				D = payloadArg(0).toDouble()
+			#]
+			
+			if [# D <= DFREE/2 #] {
+				emitlocalstream rilDistContainer : rilDistContainer(1)
+			}
+			else{
+				if [# D > DFREE #] {
+					emitlocalstream rilDistAnomalia : rilDistAnomalia(1)
+				}
+				else{
+					emitlocalstream rilDistVuoto : rilDistVuoto(1)
+				}
+			}
+			
+		}
+	}
+	Transition t0
+		whenEvent rilevazioneDistanza -> waitMisurazioni
+}
+
+QActor lettore_sonar_fisico context ctx_ioport{
 	import "java.io.*"
+	import "main.java.utils.*"
+	
 	
 	[#
 		val PYTHON_CMD = System.getenv("PYTHON_CMD") ?: ""
@@ -65,7 +157,7 @@ QActor sonar context ctx_ioport{
 			System.exit(1)
 		}
 		
-		val SONAR_SCRIPT_PATH = System.getenv("LED_ON_SCRIPT_PATH") ?: ""
+		val SONAR_SCRIPT_PATH = System.getenv("SONAR_SCRIPT_PATH") ?: ""
 		if(SONAR_SCRIPT_PATH.equals("")){
 			System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH non è impostata")
 			System.exit(1)
@@ -76,11 +168,40 @@ QActor sonar context ctx_ioport{
 			System.exit(1)
 		}
 		
+		val process = Runtime.getRuntime().exec(PYTHON_CMD + " -u " + SONAR_SCRIPT_PATH) 
+    	val reader = BufferedReader(InputStreamReader(process.inputStream))
+    	
+    	
 	#]
-	
+	 
 	State init initial{
 		println("$name: STARTING...") color yellow
+		
 	}
+	Goto working
+	
+	State working{
+		[#
+			val line = reader.readLine()
+			
+			if(line == null){
+				System.out.println("Problema rilevamento distanza")
+				System.exit(1)
+			}
+			
+			val D = line.toDoubleOrNull() ?: -1.0
+			
+			if(D<0){
+				System.out.println("Problema rilevamento distanza")
+				System.exit(1)
+			}
+			
+			println(D)
+		#]
+		
+		emit rilevazioneDistanza : rilevazioneDistanza($D)
+	}
+	Goto working
 }
 
 QActor led context ctx_ioport{
