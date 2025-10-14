@@ -1,0 +1,1 @@
+print("Il led è stato acceso")

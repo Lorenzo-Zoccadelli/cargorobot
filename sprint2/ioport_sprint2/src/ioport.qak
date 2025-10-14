@@ -1,0 +1,145 @@
+System ioport
+
+
+Dispatch 	accesioneLed 			:	accesioneLed(X)
+Dispatch 	spegnimentoLed 			:	spegnimentoLed(X)
+
+Event		rilDistContainer		:	rilDistContainer(X)
+Event		rilDistAnomalia			:	rilDistAnomalia(X)
+Event		rilDistFineAnomalia		:	rilDistFineAnomalia(X)
+
+///////////////////
+//MALFUNZIONAMENTO
+///////////////////
+Event		rilevazioneAnomalia			:	rilevazioneAnomalia(X)
+Event		risoluzioneAnomalia			:	risoluzioneAnomalia(X)
+           
+//////////////////
+//RILEVAZIONE CONTAINER
+//////////////////
+Event 		containerRilevato			:	containerRilevato(X)
+
+//Context ctx_cargoservice	ip[host="cargoservice" port=9091]
+//Context ctx_cargorobot		ip[host="cargorobot" port=9092]
+Context ctx_ioport			ip[host="localhost" port=9093]
+
+
+QActor ioport context ctx_ioport{
+	State init initial{
+		println("$name: STARTING...") color yellow
+	}
+	
+	State waitEvents{
+		println("$name: aspettando che accada qualcosa...") color yellow
+	}
+	Transition t0
+		whenEvent rilDistContainer -> containerRilevato
+		whenEvent rilDistAnomalia -> anomalia
+	
+	State containerRilevato{
+		emit containerRilevato : containerRilevato(1)
+	}
+	Goto waitEvents
+	
+	State anomalia{
+		emit rilevazioneAnomalia : rilevazioneAnomalia(1)
+		forward led -m accesioneLed : accesioneLed(1)
+	}
+	Transition t0
+		whenEvent rilDistFineAnomalia -> fineAnomalia
+		
+	State fineAnomalia{
+		emit risoluzioneAnomalia : risoluzioneAnomalia(1)
+		forward led -m spegnimentoLed : spegnimentoLed(1)
+	}
+	
+}
+
+QActor sonar context ctx_ioport{
+	import "java.io.*"
+	
+	[#
+		val PYTHON_CMD = System.getenv("PYTHON_CMD") ?: ""
+		if(PYTHON_CMD.equals("")){
+			System.out.println("La variabile d'ambiente PYTHON_CMD non è impostata")
+			System.exit(1)
+		}
+		
+		val SONAR_SCRIPT_PATH = System.getenv("LED_ON_SCRIPT_PATH") ?: ""
+		if(SONAR_SCRIPT_PATH.equals("")){
+			System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH non è impostata")
+			System.exit(1)
+		}
+		
+		if(!File(SONAR_SCRIPT_PATH).isFile()){
+			System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH contiene un percorso inesistente")
+			System.exit(1)
+		}
+		
+	#]
+	
+	State init initial{
+		println("$name: STARTING...") color yellow
+	}
+}
+
+QActor led context ctx_ioport{
+	import "java.io.*"
+	import "main.java.utils.*"
+	
+	[#
+		val PYTHON_CMD = System.getenv("PYTHON_CMD") ?: ""
+		if(PYTHON_CMD.equals("")){
+			System.out.println("La variabile d'ambiente PYTHON_CMD non è impostata")
+			System.exit(1)
+		}
+		
+		val LED_ON_SCRIPT_PATH = System.getenv("LED_ON_SCRIPT_PATH") ?: ""
+		val LED_OFF_SCRIPT_PATH = System.getenv("LED_OFF_SCRIPT_PATH") ?: ""
+		if(LED_ON_SCRIPT_PATH.equals("") || LED_OFF_SCRIPT_PATH.equals("")){
+			System.out.println("Le variabili d'ambiente LED_ON_SCRIPT_PATH e LED_OFF_SCRIPT_PATH non sono impostate")
+			System.exit(1)
+		}
+		
+		if(!File(LED_ON_SCRIPT_PATH).isFile() || !File(LED_OFF_SCRIPT_PATH).isFile()){
+			System.out.println("Le variabili d'ambiente LED_ON_SCRIPT_PATH e LED_OFF_SCRIPT_PATH contengono percorsi inesistenti")
+			System.exit(1)
+		}
+		 
+	#]
+	
+	
+	State init initial{
+		println("$name: STARTING...") color yellow
+	}
+	Goto ledOff
+	
+	State ledOff{
+		//spegnimento led
+		[# 
+			val process = Runtime.getRuntime().exec(PYTHON_CMD+" "+LED_OFF_SCRIPT_PATH)
+			val ledFisicoMsg = "led fisico: " + ProcessUtils.readAllStdOutput(process)
+		#]
+		println(ledFisicoMsg) color yellow
+		
+		println("$name: led spento") color yellow
+	}
+	Transition t0
+		whenMsg accesioneLed -> ledOn
+		whenMsg spegnimentoLed -> ledOff
+		
+	
+	State ledOn{
+		//accensione led
+		[# 
+			val process = Runtime.getRuntime().exec(PYTHON_CMD+" "+LED_ON_SCRIPT_PATH)
+			val ledFisicoMsg = "led fisico: " + ProcessUtils.readAllStdOutput(process)
+		#]
+		println(ledFisicoMsg) color yellow
+		println("$name: led acceso") color yellow
+	}
+	Transition t0
+		whenMsg accesioneLed -> ledOn
+		whenMsg spegnimentoLed -> ledOff
+	
+}
