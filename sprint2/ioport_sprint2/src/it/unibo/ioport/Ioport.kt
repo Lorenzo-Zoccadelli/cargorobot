@@ -51,22 +51,26 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 				state("init") { //this:State
 					action { //it:State
 						CommUtils.outyellow("$name: STARTING...")
+						subscribeToLocalActor("sonar") 
+						subscribeToLocalActor("sonar") 
+						subscribeToLocalActor("sonar") 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition( edgeName="goto",targetState="ioportVuota", cond=doswitch() )
 				}	 
 				state("ioportVuota") { //this:State
 					action { //it:State
-						CommUtils.outyellow("$name: aspettando che accada qualcosa...")
+						CommUtils.outyellow("$name: ioport vuota...")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t00",targetState="resetPerContainer",cond=whenEvent("rilDistContainer"))
-					transition(edgeName="t01",targetState="resetPerAnomalia",cond=whenEvent("rilDistAnomalia"))
+					 transition(edgeName="t06",targetState="resetPerContainer",cond=whenEvent("rilDistContainer"))
+					transition(edgeName="t07",targetState="resetPerAnomalia",cond=whenEvent("rilDistAnomalia"))
 				}	 
 				state("resetPerContainer") { //this:State
 					action { //it:State
@@ -91,21 +95,21 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t02",targetState="containerRilevato",cond=whenDispatch("continue"))
-					transition(edgeName="t03",targetState="checkContainer",cond=whenEvent("rilDistContainer"))
-					transition(edgeName="t04",targetState="resetPerAnomalia",cond=whenEvent("rilDistAnomalia"))
-					transition(edgeName="t05",targetState="ioportVuota",cond=whenEvent("rilDistVuoto"))
+					 transition(edgeName="t08",targetState="containerRilevato",cond=whenDispatch("continue"))
+					transition(edgeName="t09",targetState="checkContainer",cond=whenEvent("rilDistContainer"))
+					transition(edgeName="t010",targetState="resetPerAnomalia",cond=whenEvent("rilDistAnomalia"))
+					transition(edgeName="t011",targetState="ioportVuota",cond=whenEvent("rilDistVuoto"))
 				}	 
 				state("containerRilevato") { //this:State
 					action { //it:State
-						CommUtils.outyellow("$name: aspettando che accada qualcosa...")
+						CommUtils.outyellow("$name: container rilevato")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t06",targetState="resetPerAnomalia",cond=whenEvent("rilDistAnomalia"))
-					transition(edgeName="t07",targetState="ioportVuota",cond=whenEvent("rilDistVuoto"))
+					 transition(edgeName="t012",targetState="resetPerAnomalia",cond=whenEvent("rilDistAnomalia"))
+					transition(edgeName="t013",targetState="ioportVuota",cond=whenEvent("rilDistVuoto"))
 				}	 
 				state("resetPerAnomalia") { //this:State
 					action { //it:State
@@ -130,10 +134,10 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t08",targetState="anomalia",cond=whenDispatch("continue"))
-					transition(edgeName="t09",targetState="resetPerContainer",cond=whenEvent("rilDistContainer"))
-					transition(edgeName="t010",targetState="checkAnomalia",cond=whenEvent("rilDistAnomalia"))
-					transition(edgeName="t011",targetState="ioportVuota",cond=whenEvent("rilDistVuoto"))
+					 transition(edgeName="t014",targetState="anomalia",cond=whenDispatch("continue"))
+					transition(edgeName="t015",targetState="resetPerContainer",cond=whenEvent("rilDistContainer"))
+					transition(edgeName="t016",targetState="checkAnomalia",cond=whenEvent("rilDistAnomalia"))
+					transition(edgeName="t017",targetState="ioportVuota",cond=whenEvent("rilDistVuoto"))
 				}	 
 				state("anomalia") { //this:State
 					action { //it:State
@@ -143,7 +147,7 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t012",targetState="fineAnomalia",cond=whenEvent("rilDistVuoto"))
+					 transition(edgeName="t018",targetState="fineAnomalia",cond=whenEvent("rilDistVuoto"))
 				}	 
 				state("fineAnomalia") { //this:State
 					action { //it:State
