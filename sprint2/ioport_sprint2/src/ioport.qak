@@ -26,11 +26,13 @@ Dispatch    rilCont : rilCont(X)
 Dispatch	rilFree : rilFree(X)
 Dispatch	rilMal	: rilMal(X)
 
-//Context ctx_cargoservice	ip[host="cargoservice" port=9091]
-//Context ctx_cargorobot		ip[host="cargorobot" port=9092]
+Context ctx_cargoservice	ip[host="cargoservice" port=9091]
+Context ctx_cargorobot		ip[host="cargorobot" port=9092]
 Context ctx_ioport			ip[host="localhost" port=9093]
 
 
+ExternalQActor cargoservice context ctx_cargoservice
+ExternalQActor corgorobot context ctx_cargorobot
 
 
 QActor lettore_sonar_fisico context ctx_ioport{

@@ -25,6 +25,10 @@ with Diagram('ioportArch', show=False, outformat='png', graph_attr=graphattr) as
   with Cluster('env'):
      sys = Custom('','./qakicons/system.png')
 ### see https://renenyffenegger.ch/notes/tools/Graphviz/attributes/label/HTML-like/index
+     with Cluster('ctx_cargoservice', graph_attr=nodeattr):
+          cargoservice=Custom('cargoservice(ext)','./qakicons/externalQActor.png')
+     with Cluster('ctx_cargorobot', graph_attr=nodeattr):
+          corgorobot=Custom('corgorobot(ext)','./qakicons/externalQActor.png')
      with Cluster('ctx_ioport', graph_attr=nodeattr):
           lettore_sonar_fisico=Custom('lettore_sonar_fisico','./qakicons/symActorWithobjSmall.png')
           sonar=Custom('sonar','./qakicons/symActorWithobjSmall.png')
