@@ -81,7 +81,7 @@ class Lettore_sonar_fisico ( name: String, scope: CoroutineScope, isconfined: Bo
 										System.exit(1)
 									}
 									
-						emit("rilevazioneDistanza", "rilevazioneDistanza($D)" ) 
+						emitLocalStreamEvent("rilevazioneDistanza", "rilevazioneDistanza($D)" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
