@@ -33,7 +33,26 @@ Context ctx_ioport			ip[host="localhost" port=9093]
 
 QActor ioport context ctx_ioport{
 	
-	[# var contatore = 0 #]
+	import "main.java.utils.*"
+	
+	[# 
+		var contatore = 0 
+	
+		
+		val RIL_CONTAINER_SECS=ProcessUtils.getIntEnvVar("RIL_CONTAINER_SECS").orElse(3)
+		val RIL_ANOMALIA_SECS=ProcessUtils.getIntEnvVar("RIL_ANOMALIA_SECS").orElse(3)
+		val SONAR_MIS_PER_SEC=ProcessUtils.getIntEnvVar("SONAR_MIS_PER_SEC").orElse(-1)
+
+		if(SONAR_MIS_PER_SEC<0){
+			println("Variabile d'ambiente SONAR_MIS_PER_SEC non presente o errata")
+			System.exit(1)
+		}
+		
+		val ContainerCounterTarget = SONAR_MIS_PER_SEC * RIL_CONTAINER_SECS
+		val AnomaliaTargetCounter = SONAR_MIS_PER_SEC * RIL_ANOMALIA_SECS
+		
+	
+	#]
 	
 	State init initial{
 		println("$name: STARTING...") color yellow
@@ -55,7 +74,7 @@ QActor ioport context ctx_ioport{
 	
 	State checkContainer{
 		[# contatore += 1 #]
-		if [# contatore == 3 #]{
+		if [# contatore == ContainerCounterTarget #]{
 			[# contatore = 0 #]
 			emit containerRilevato : containerRilevato(1)
 			autodispatch continue : continue(1)
@@ -82,7 +101,7 @@ QActor ioport context ctx_ioport{
 	
 	State checkAnomalia{
 		[# contatore += 1 #]
-		if [# contatore == 3 #]{
+		if [# contatore == AnomaliaTargetCounter #]{
 			[# contatore = 0 #]
 			emit rilevazioneAnomalia : rilevazioneAnomalia(1)
 			autodispatch continue : continue(1)
@@ -108,15 +127,50 @@ QActor ioport context ctx_ioport{
 	
 }
 
+
+
+
 QActor sonar context ctx_ioport{
 	
+	import "main.java.utils.*"
+	
 	[#
-		DFREE = 11
-		var D = 0.0	
+		
+		val DFREE_CALIBRATION_FLAG = ProcessUtils.getIntEnvVar("DFREE_CALIBRATION_FLAG").orElse(0)
+		var DFREE = 0
+		if(DFREE_CALIBRATION_FLAG == 0){
+			DFREE = ProcessUtils.getIntEnvVar("DFREE").orElse(-1)
+			if(DFREE<0){
+				println("Variabile d'ambiente DFREE non presente o errata")
+				System.exit(1)
+			}
+		}
+		
+		var D = 0.0
 	#]
 	
-	State initi initial{
+	State init initial{
 		println("$name: STARTING...") color yellow
+	}
+	Transition t0
+		whenEvent rilevazioneDistanza and [# DFREE_CALIBRATION_FLAG == 0 #] -> waitMisurazioni
+		whenEvent rilevazioneDistanza and [# DFREE_CALIBRATION_FLAG == 1 #] -> calibrazione
+	
+	
+	State calibrazione{
+		if [# DFREE_CALIBRATION_FLAG == 1 #]{
+			//calibrazione
+		}
+		else{
+			autodispatch continue : continue(1)
+		}
+	}
+	Transition t0
+		whenMsg continue -> endCalibrazione
+		whenEvent rilevazioneDistanza -> waitMisurazioni
+	
+	State endCalibrazione{
+		println("$name: calibrazione terminata, DFREE=${DFREE}") color yellow
 	}
 	Transition t0
 		whenEvent rilevazioneDistanza -> waitMisurazioni
@@ -144,6 +198,9 @@ QActor sonar context ctx_ioport{
 	Transition t0
 		whenEvent rilevazioneDistanza -> waitMisurazioni
 }
+
+
+
 
 QActor lettore_sonar_fisico context ctx_ioport{
 	import "java.io.*"
@@ -196,7 +253,6 @@ QActor lettore_sonar_fisico context ctx_ioport{
 				System.exit(1)
 			}
 			
-			println(D)
 		#]
 		
 		emit rilevazioneDistanza : rilevazioneDistanza($D)

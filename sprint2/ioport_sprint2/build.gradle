@@ -200,7 +200,12 @@ tasks.register('copyReport', Copy) {
 
 
 
-tasks.named("run", JavaExec) {
+tasks.named("run", JavaExec) {	
+	environment "DFREE_CALIBRATION_FLAG", project.findProperty("DFREE_CALIBRATION_FLAG")
+	environment "DFREE", project.findProperty("DFREE")
+	environment "RIL_CONTAINER_SECS", project.findProperty("RIL_CONTAINER_SECS")
+	environment "RIL_ANOMALIA_SECS", project.findProperty("RIL_ANOMALIA_SECS")
+	environment "SONAR_MIS_PER_SEC", project.findProperty("SONAR_MIS_PER_SEC")
 	environment "PYTHON_CMD", project.findProperty("PYTHON_CMD")
 	environment "SONAR_SCRIPT_PATH", project.findProperty("SONAR_SCRIPT_PATH")
 	environment "LED_OFF_SCRIPT_PATH", project.findProperty("LED_OFF_SCRIPT_PATH")

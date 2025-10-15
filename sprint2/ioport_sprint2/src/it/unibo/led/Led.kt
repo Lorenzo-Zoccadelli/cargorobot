@@ -73,8 +73,8 @@ class Led ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdy
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t015",targetState="ledOn",cond=whenDispatch("accesioneLed"))
-					transition(edgeName="t016",targetState="ledOff",cond=whenDispatch("spegnimentoLed"))
+					 transition(edgeName="t019",targetState="ledOn",cond=whenDispatch("accesioneLed"))
+					transition(edgeName="t020",targetState="ledOff",cond=whenDispatch("spegnimentoLed"))
 				}	 
 				state("ledOn") { //this:State
 					action { //it:State
@@ -88,8 +88,8 @@ class Led ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdy
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t017",targetState="ledOn",cond=whenDispatch("accesioneLed"))
-					transition(edgeName="t018",targetState="ledOff",cond=whenDispatch("spegnimentoLed"))
+					 transition(edgeName="t021",targetState="ledOn",cond=whenDispatch("accesioneLed"))
+					transition(edgeName="t022",targetState="ledOff",cond=whenDispatch("spegnimentoLed"))
 				}	 
 			}
 		}
