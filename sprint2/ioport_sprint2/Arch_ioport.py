@@ -43,4 +43,6 @@ with Diagram('ioportArch', show=False, outformat='png', graph_attr=graphattr) as
      ioport >> Edge( label='containerRilevato', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      ioport >> Edge( label='rilevazioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      ioport >> Edge( label='risoluzioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     sys >> Edge( label='rilevazioneAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> led
+     sys >> Edge( label='risoluzioneAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> led
 diag

@@ -357,8 +357,7 @@ QActor led context ctx_ioport{
 		println("$name: led spento") color yellow
 	}
 	Transition t0
-		whenMsg accesioneLed -> ledOn
-		whenMsg spegnimentoLed -> ledOff
+		whenEvent rilevazioneAnomalia -> ledOn
 		
 	
 	State ledOn{
@@ -371,7 +370,5 @@ QActor led context ctx_ioport{
 		println("$name: led acceso") color yellow
 	}
 	Transition t0
-		whenMsg accesioneLed -> ledOn
-		whenMsg spegnimentoLed -> ledOff
-	
+		whenEvent risoluzioneAnomalia -> ledOff	
 }
