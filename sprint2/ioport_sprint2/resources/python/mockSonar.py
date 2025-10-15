@@ -9,7 +9,32 @@ while True:
     time.sleep(1)
    
 '''
-'''
+
+
+print(10)
+time.sleep(1)
+print(10)
+time.sleep(1)
+print(10)
+time.sleep(1)
+print(11)
+time.sleep(1)
+print(9)
+time.sleep(1)
+print(8.5)
+time.sleep(1)
+print(10.5)
+time.sleep(1)
+print(11)
+time.sleep(1)
+print(9)
+time.sleep(1)
+print(10)
+time.sleep(1)
+
+
+
+
 print(10)
 time.sleep(1)
 print(10)
@@ -49,6 +74,5 @@ print(9)
 
 time.sleep(1)
 print(10)
-'''
 
 

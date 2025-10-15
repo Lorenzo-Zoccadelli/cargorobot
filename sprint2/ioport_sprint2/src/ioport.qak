@@ -105,16 +105,25 @@ QActor sonar context ctx_ioport{
 	[#
 		
 		val DFREE_CALIBRATION_FLAG = ProcessUtils.getIntEnvVar("DFREE_CALIBRATION_FLAG").orElse(0)
-		var DFREE = 0
+		var DFREE = 0.0
 		if(DFREE_CALIBRATION_FLAG == 0){
-			DFREE = ProcessUtils.getIntEnvVar("DFREE").orElse(-1)
-			if(DFREE<0){
+			DFREE = ProcessUtils.getDoubleEnvVar("DFREE").orElse(-1.0)
+			if(DFREE<0.0){
 				println("Variabile d'ambiente DFREE non presente o errata")
 				System.exit(1)
 			}
 		}
 		
-		var counter = 0
+		val SONAR_MIS_PER_SEC=ProcessUtils.getIntEnvVar("SONAR_MIS_PER_SEC").orElse(-1)
+
+		if(SONAR_MIS_PER_SEC<0){
+			println("Variabile d'ambiente SONAR_MIS_PER_SEC non presente o errata")
+			System.exit(1)
+		}
+		
+		val TargetCounterCalibrazione = SONAR_MIS_PER_SEC * 10
+		
+		var counterCalibrazione = 0
 	#]
 	
 	State init initial{
@@ -132,17 +141,30 @@ QActor sonar context ctx_ioport{
 	
 	
 	State calibrazione{
-		println("$name: calibrazione in corso [${counter}/10]...") color yellow
-		if [# DFREE_CALIBRATION_FLAG == 1 #]{
-			//calibrazione
-		}
-		else{
-			autodispatch continue : continue(1)
+		onMsg(rilevazioneDistanza : rilevazioneDistanza(X)){
+			[#
+				val D = payloadArg(0).toDouble()
+			#]
+			
+			println("$name: calibrazione in corso [${counterCalibrazione}/${TargetCounterCalibrazione}]...") color yellow
+			if [# counterCalibrazione < TargetCounterCalibrazione #]{
+				[#
+					DFREE += D
+					counterCalibrazione += 1
+				#]
+			}
+			else{
+				[#
+					DFREE = DFREE/TargetCounterCalibrazione
+				#]
+				autodispatch continue : continue(1)
+			}
+			
 		}
 	}
 	Transition t0
 		whenMsg continue -> endCalibrazione
-		whenEvent rilevazioneDistanza -> waitMisurazioni
+		whenEvent rilevazioneDistanza -> calibrazione
 	
 	State endCalibrazione{
 		println("$name: calibrazione terminata, DFREE=${DFREE}") color yellow
