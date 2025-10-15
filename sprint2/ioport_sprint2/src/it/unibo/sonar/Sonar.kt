@@ -86,7 +86,7 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 								}
 								else
 								 {
-								 					DFREE = DFREE/TargetCounterCalibrazione
+								 					//DFREE = DFREE/TargetCounterCalibrazione
 								 forward("continue", "continue(1)" ,name ) 
 								 }
 						}

@@ -157,7 +157,7 @@ QActor sonar context ctx_ioport{
 			}
 			else{
 				[#
-					DFREE = DFREE/TargetCounterCalibrazione
+					//DFREE = DFREE/TargetCounterCalibrazione
 				#]
 				autodispatch continue : continue(1)
 			}
