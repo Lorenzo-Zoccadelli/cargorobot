@@ -7,6 +7,7 @@ while True:
     print(valore)
     time.sleep(1)
 """
+<<<<<<< Updated upstream
 
 
 print(10)
@@ -73,3 +74,8 @@ print(9)
 time.sleep(1)
 print(10)
 
+=======
+import time
+while True:
+	time.sleep(1)
+>>>>>>> Stashed changes
