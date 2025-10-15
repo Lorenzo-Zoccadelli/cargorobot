@@ -14,7 +14,7 @@ Gruppo di lavoro:
 \
 [Directory progetto sprint 0](https://github.com/Lorenzo-Zoccadelli/cargorobot/tree/main/sprint0/cargorobot_sprint0)
 \
-[Directory documentazione sprint 0](https://github.com/Lorenzo-Zoccadelli/cargorobot/tree/main/sprint0/cargorobot_sprint0/sprint0_v2.pdf)
+[Directory documentazione sprint 0](https://github.com/Lorenzo-Zoccadelli/cargorobot/tree/main/sprint0/sprint0_v2.pdf)
 
 
 # Sprint 1
@@ -33,5 +33,6 @@ Gruppo di lavoro:
 [Directory progetto ioport (sprint 2)](https://github.com/Lorenzo-Zoccadelli/cargorobot/tree/main/sprint2/ioport_sprint2)
 \
 [Documentazione sprint 2](https://github.com/Lorenzo-Zoccadelli/cargorobot/tree/main/sprint2/sprint2_v0.pdf)
+
 
 
