@@ -79,7 +79,9 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 								CommUtils.outyellow("$name: calibrazione in corso [${counterCalibrazione}/${TargetCounterCalibrazione}]...")
 								if(  counterCalibrazione < TargetCounterCalibrazione  
 								 ){
-													DFREE += D
+													if(D < DFREE){
+														DFREE = D
+													}
 													counterCalibrazione += 1
 								}
 								else

@@ -149,7 +149,9 @@ QActor sonar context ctx_ioport{
 			println("$name: calibrazione in corso [${counterCalibrazione}/${TargetCounterCalibrazione}]...") color yellow
 			if [# counterCalibrazione < TargetCounterCalibrazione #]{
 				[#
-					DFREE += D
+					if(D < DFREE){
+						DFREE = D
+					}
 					counterCalibrazione += 1
 				#]
 			}
