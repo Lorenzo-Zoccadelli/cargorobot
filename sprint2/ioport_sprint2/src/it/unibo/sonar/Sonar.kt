@@ -33,16 +33,25 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 		
 				
 				val DFREE_CALIBRATION_FLAG = ProcessUtils.getIntEnvVar("DFREE_CALIBRATION_FLAG").orElse(0)
-				var DFREE = 0
+				var DFREE = 0.0
 				if(DFREE_CALIBRATION_FLAG == 0){
-					DFREE = ProcessUtils.getIntEnvVar("DFREE").orElse(-1)
-					if(DFREE<0){
+					DFREE = ProcessUtils.getDoubleEnvVar("DFREE").orElse(-1.0)
+					if(DFREE<0.0){
 						println("Variabile d'ambiente DFREE non presente o errata")
 						System.exit(1)
 					}
 				}
 				
-				var counter = 0
+				val SONAR_MIS_PER_SEC=ProcessUtils.getIntEnvVar("SONAR_MIS_PER_SEC").orElse(-1)
+		
+				if(SONAR_MIS_PER_SEC<0){
+					println("Variabile d'ambiente SONAR_MIS_PER_SEC non presente o errata")
+					System.exit(1)
+				}
+				
+				val TargetCounterCalibrazione = SONAR_MIS_PER_SEC * 10
+				
+				var counterCalibrazione = 0
 		return { //this:ActionBasciFsm
 				state("init") { //this:State
 					action { //it:State
@@ -63,19 +72,29 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 				}	 
 				state("calibrazione") { //this:State
 					action { //it:State
-						CommUtils.outyellow("$name: calibrazione in corso [${counter}/10]...")
-						if(  DFREE_CALIBRATION_FLAG == 1  
-						 ){}
-						else
-						 {forward("continue", "continue(1)" ,name ) 
-						 }
+						if( checkMsgContent( Term.createTerm("rilevazioneDistanza(X)"), Term.createTerm("rilevazioneDistanza(X)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								
+												val D = payloadArg(0).toDouble()
+								CommUtils.outyellow("$name: calibrazione in corso [${counterCalibrazione}/${TargetCounterCalibrazione}]...")
+								if(  counterCalibrazione < TargetCounterCalibrazione  
+								 ){
+													DFREE += D
+													counterCalibrazione += 1
+								}
+								else
+								 {
+								 					DFREE = DFREE/TargetCounterCalibrazione
+								 forward("continue", "continue(1)" ,name ) 
+								 }
+						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
 					 transition(edgeName="t02",targetState="endCalibrazione",cond=whenDispatch("continue"))
-					transition(edgeName="t03",targetState="waitMisurazioni",cond=whenEvent("rilevazioneDistanza"))
+					transition(edgeName="t03",targetState="calibrazione",cond=whenEvent("rilevazioneDistanza"))
 				}	 
 				state("endCalibrazione") { //this:State
 					action { //it:State

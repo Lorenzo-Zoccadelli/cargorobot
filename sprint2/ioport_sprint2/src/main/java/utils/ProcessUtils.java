@@ -48,12 +48,12 @@ public class ProcessUtils {
 		}
 	}
 	
-	public static Optional<Integer> getDoubleEnvVar(String name) {
+	public static Optional<Double> getDoubleEnvVar(String name) {
 		var value = System.getenv(name);
 		if(value==null) return Optional.empty();
 		
 		try {
-			return Optional.of(Integer.parseInt(value));
+			return Optional.of(Double.parseDouble(value));
 		}
 		catch(Exception e) {
 			return Optional.empty();
