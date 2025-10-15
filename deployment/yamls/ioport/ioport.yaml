@@ -1,0 +1,28 @@
+services:
+
+  ioport:
+    container_name: ioport
+    image: ioport:1.0
+    ports:
+      - 9093:9093/tcp
+      - 9093:9093/udp
+    networks:
+      - iss-network
+    environment:
+      - DFREE_CALIBRATION_FLAG=0
+      - DFREE=10
+      - RIL_CONTAINER_SECS=3
+      - RIL_ANOMALIA_SECS=3
+      - SONAR_MIS_PER_SEC=1
+      - PYTHON_CMD=python
+      - SONAR_SCRIPT_PATH=/resources/python/mockSonar.py
+      - LED_OFF_SCRIPT_PATH=/resources/python/mockLedOff.py
+      - LED_ON_SCRIPT_PATH=/resources/python/mockLedOn.py
+    volumes:
+      - ./ledPython25On.py:/resources/python/mockLedOn.py
+      - ./ledPython25Off.py:/resources/python/mockLedOff.py
+      - ./sonar.py:/resources/python/mockSonar.py
+
+networks:
+  iss-network:
+    external: true
