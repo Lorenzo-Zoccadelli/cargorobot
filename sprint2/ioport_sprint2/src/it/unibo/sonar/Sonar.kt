@@ -33,7 +33,7 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 		
 				
 				val DFREE_CALIBRATION_FLAG = ProcessUtils.getIntEnvVar("DFREE_CALIBRATION_FLAG").orElse(0)
-				var DFREE = 0.0
+				var DFREE = -1.0
 				if(DFREE_CALIBRATION_FLAG == 0){
 					DFREE = ProcessUtils.getDoubleEnvVar("DFREE").orElse(-1.0)
 					if(DFREE<0.0){
@@ -79,7 +79,7 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 								CommUtils.outyellow("$name: calibrazione in corso [${counterCalibrazione}/${TargetCounterCalibrazione}]...")
 								if(  counterCalibrazione < TargetCounterCalibrazione  
 								 ){
-													if(D < DFREE){
+													if(D < 0.0 || D < DFREE){
 														DFREE = D
 													}
 													counterCalibrazione += 1
