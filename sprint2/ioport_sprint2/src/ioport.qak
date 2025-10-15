@@ -1,9 +1,6 @@
 System ioport
 
 
-Dispatch 	accesioneLed 			:	accesioneLed(X)
-Dispatch 	spegnimentoLed 			:	spegnimentoLed(X)
-
 Event		rilevazioneDistanza		:	rilevazioneDistanza(X)
 Event		rilDistContainer		:	rilDistContainer(X)
 Event		rilDistAnomalia			:	rilDistAnomalia(X)
@@ -22,9 +19,6 @@ Event 		containerRilevato			:	containerRilevato(X)
 
 //INTERNI
 Dispatch 	continue : continue(X)
-Dispatch    rilCont : rilCont(X)
-Dispatch	rilFree : rilFree(X)
-Dispatch	rilMal	: rilMal(X)
 
 Context ctx_cargoservice	ip[host="cargoservice" port=9091]
 Context ctx_cargorobot		ip[host="cargorobot" port=9092]
@@ -345,7 +339,7 @@ QActor led context ctx_ioport{
 		println("$name: STARTING...") color yellow
 	}
 	Goto ledOff
-	
+	 
 	State ledOff{
 		//spegnimento led
 		[# 

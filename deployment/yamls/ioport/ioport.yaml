@@ -9,19 +9,19 @@ services:
     networks:
       - iss-network
     environment:
-      - DFREE_CALIBRATION_FLAG=0
+      - DFREE_CALIBRATION_FLAG=1
       - DFREE=10
       - RIL_CONTAINER_SECS=3
       - RIL_ANOMALIA_SECS=3
       - SONAR_MIS_PER_SEC=1
       - PYTHON_CMD=python
-      - SONAR_SCRIPT_PATH=/resources/python/mockSonar.py
-      - LED_OFF_SCRIPT_PATH=/resources/python/mockLedOff.py
-      - LED_ON_SCRIPT_PATH=/resources/python/mockLedOn.py
+      - SONAR_SCRIPT_PATH=/resources/python/sonar.py
+      - LED_OFF_SCRIPT_PATH=/resources/python/ledPython25Off.py
+      - LED_ON_SCRIPT_PATH=/resources/python/ledPython25On.py
     volumes:
-      - ./ledPython25On.py:/resources/python/mockLedOn.py
-      - ./ledPython25Off.py:/resources/python/mockLedOff.py
-      - ./sonar.py:/resources/python/mockSonar.py
+      - ./ledPython25On.py:/resources/python/ledPython25On.py
+      - ./ledPython25Off.py:/resources/python/ledPython25Off.py
+      - ./sonar.py:/resources/python/sonar.py
 
 networks:
   iss-network:
