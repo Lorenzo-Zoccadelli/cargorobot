@@ -1,0 +1,236 @@
+System cargoservice
+
+///////////////////
+//REQ CARGOSERVICE
+///////////////////
+Request 	richiestaCarico 			:	richiestaCarico(PID)
+Reply		richiestaCaricoAccettata	:	richiestaCaricoAccettata(ESITO) for richiestaCarico
+Reply		richiestaCaricoRifiutata	:	richiestaCaricoRifiutata(ESITO) for richiestaCarico
+
+
+///////////////////
+//MALFUNZIONAMENTO
+///////////////////
+Event		rilevazioneAnomalia			:	rilevazioneAnomalia(X)
+Event		risoluzioneAnomalia			:	risoluzioneAnomalia(X)
+           
+//////////////////
+//DAL SONAR
+//////////////////
+Event 		containerRilevato			:	containerRilevato(X)
+
+//////////////////
+//INTERNI
+//////////////////
+Dispatch	endLocal					:	endLocal(X)
+
+
+///////////////////
+//PRODUCTSERVICE
+///////////////////
+Request createProduct : product(String)                     //String JSON '{"productId":31,"name":"p31","weight":311}'
+Reply   createdProduct: productid(ID) for createProduct   //String JSON
+
+Request getProduct : product( ID )    
+Reply   getProductAnswer: product( JSonString ) for getProduct 
+
+
+////////////////////
+//CARGOROBOT
+////////////////////
+Request		richiestaCaricamentoSlot : richiestaCaricamentoSlot(TARGETX, TARGETY)
+Reply		slotCaricato : slotCaricato(X) for richiestaCaricamentoSlot
+Reply		caricamentoFallito : caricamentoFallito(X) for richiestaCaricamentoSlot
+
+
+////////////////////
+//PER TEST
+////////////////////
+Request		resetStiva				: resetStiva(X)
+Reply		esitoResetStiva			: esitoResetStiva(X) for resetStiva
+
+//CTXs
+Context ctx_productservice	ip[host="productservice" port=8111]
+Context ctx_cargoservice	ip[host="localhost" port=9091]
+Context ctx_cargorobot		ip[host="cargorobot" port=9092]
+
+ExternalQActor productservice context ctx_productservice
+ExternalQActor cargorobot context ctx_cargorobot
+
+QActor cargoservice context ctx_cargoservice {	
+	import "main.java.model.*" 
+	import "java.io.IOException"
+	
+	[#
+		val MAX_LOAD = System.getenv("MAX_LOAD").toIntOrNull() ?: -1
+		if(MAX_LOAD<=0){
+			System.out.println("La variabile d'ambinete MAX_LOAD non è settata correttamente o è un numero <=0")
+			System.exit(1)
+		}
+		
+		var slotMap: SlotMap? = null
+		try{
+			slotMap = CargoSlotMap("slotmap-conf.json")
+		}
+		catch(e: IOException){
+			System.exit(1)
+		}
+		var currentProduct: Product? = null
+		var currentSlot: Slot? = null
+	#]
+	
+	State init initial {
+		println("$name: STARTING...") color red
+	}
+	Goto wait_requests 
+
+
+	///////////////////
+	//IDLE
+	///////////////////
+	State wait_requests{
+		println("$name: in attesa di richieste...") color red
+	}
+	Transition t0
+		whenRequest richiestaCarico -> elaboraRichiesta
+		whenRequest resetStiva -> handleResetStiva
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+		
+	///////////////////
+	//REQ TO PS
+	///////////////////
+	State elaboraRichiesta{
+		onMsg(richiestaCarico : richiestaCarico(PID)){
+			[#
+				val ID = payloadArg(0).toInt()
+			#]
+			println("$name: ricevuta richiesta di caricamento per il prodotto $ID") color red
+			request productservice -m getProduct : product($ID)
+		}
+	}
+	Transition t0
+		whenReply getProductAnswer -> datiProdottoRicevuti
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+		
+	State datiProdottoRicevuti{
+		onMsg(getProductAnswer : product(JSonString)){
+			[#
+				val JsonString = payloadArg(0).toString()
+				currentProduct = Product(JsonString)
+			#]
+			
+			if[# currentProduct!!.getProductId() <= 0 #]{	//ERRORE
+				println("$name: il prodotto richiesto non esiste") color red
+				[# val Esito = "'Prodotto non esistente'"#]
+				replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata($Esito)
+				autodispatch endLocal : endLocal(0)
+			}
+		}
+	}
+	Transition t0
+		whenTime 10 -> assegnamentoSlot
+		whenMsg endLocal -> wait_requests
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+	
+	
+	////////////////////
+	//ASSEGNAMENTO SLOT
+	////////////////////
+	State assegnamentoSlot{
+		println("$name: recuperati i dati del prodotto") color red
+		if[# !slotMap!!.isAnySlotEmpty() #]{
+			println("$name: richiesta rifiutata, nessuno slot disponibile") color red
+			[# val Esito = "'Nessuno slot disponibile'"#]
+			replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata($Esito)
+			autodispatch endLocal : endLocal(0)
+		}
+		else {
+			if[# slotMap!!.getTotalWeight() + currentProduct!!.getWeight() > MAX_LOAD #]{
+				println("$name: richiesta rifiutata, peso eccessivo") color red
+				[# val Esito = "'Il prodotto eccede il peso massimo della stiva'"#]
+				replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata($Esito)
+				autodispatch endLocal : endLocal(0)
+			}
+			else{
+				[# 
+					currentSlot = slotMap!!.getFirstEmptySlot()
+					slotMap!!.putProductIntoSlot(currentSlot, currentProduct)
+					val Esito = "'OK'"
+				#]
+				println("$name: prodotto assegnato allo slot $currentSlot") color red
+				replyTo richiestaCarico with richiestaCaricoAccettata : richiestaCaricoAccettata($Esito)
+			}
+		}
+		[#
+			currentProduct = null	
+		#]
+	}
+	Transition t0
+		whenTime 10 -> waitContainer
+		whenMsg endLocal -> wait_requests
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+		
+		
+	
+	
+	State waitContainer{
+		println("$name: in attesa che il container venga messo davanti all'IOPort") color red
+	}
+	Transition t0
+		whenEvent containerRilevato -> caricaProdotto
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+	
+	
+	////////////////////
+	//REQ AL CARGOROBOT
+	////////////////////
+	State caricaProdotto{
+		println("$name: caricamento prodotto da parte del cargorobot iniziato") color red
+		[#
+			val SlotJson = "\'" + currentSlot.toString() + "\'" 
+			currentSlot=null
+		#]
+		request cargorobot -m richiestaCaricamentoSlot : richiestaCaricamentoSlot($SlotJson)
+	}
+	Transition t0
+		whenReply slotCaricato -> caricamentoTerminato
+		whenReply caricamentoFallito -> problemaCaricamento
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+		
+	State caricamentoTerminato{
+		println("$name: caricamento del prodotto nello slot completato correttamente") color red
+	}
+	Goto wait_requests
+	
+	State problemaCaricamento{
+		println("$name: problema nel caricamento da parte del cargorobot") color red
+	}
+	Goto wait_requests
+	
+	
+	/////////////////////
+	//GESTIONE MALFUNZIONAMENTO
+	/////////////////////
+	State handleAnomalia{
+		println("$name: rilevazione anomalia...") color red
+	}
+	Transition t0
+		whenEvent risoluzioneAnomalia -> resumeFromAnomalia
+	
+	State resumeFromAnomalia{
+		println("$name: anomalia risolta...") color red
+		returnFromInterrupt
+	}
+	
+	
+	/////////////////////
+	//PER TEST
+	/////////////////////
+	State handleResetStiva{
+		[# slotMap = CargoSlotMap() #]
+		replyTo resetStiva with esitoResetStiva : esitoResetStiva(0)
+	}
+	Goto wait_requests
+	
+		
+}

@@ -1,0 +1,908 @@
+System system
+
+
+Request		richiestaCaricamentoSlot : richiestaCaricamentoSlot(SlotJson)
+Reply		slotCaricato : slotCaricato(X) for richiestaCaricamentoSlot
+Reply		caricamentoFallito : caricamentoFallito(X) for richiestaCaricamentoSlot
+
+Event		rilevazioneAnomalia			:	rilevazioneAnomalia(X)
+Event		risoluzioneAnomalia			:	risoluzioneAnomalia(X)
+ 
+ 
+/////////////////////////
+// INTERNI
+/////////////////////////
+//Dispatch	risoluzioneAnomaliaVeloce	: risoluzioneAnomaliaVeloce(X)
+ 
+ 
+//-----------------------------
+// MESSAGGI PER BASICROBOT
+//-----------------------------
+Request engage : engage(CALLER, STEPTIME)
+Reply engagedone : engagedone(ARG) for engage
+Reply engagerefused : engagerefused(ARG) for engage
+
+Dispatch disengage    : disengage(ARG)
+
+Dispatch setdirection : dir( D )  //D =up|down|left|right
+Dispatch setrobotstate : setpos(X,Y,Dir)
+Dispatch setplanbuildelay: setplanbuildelay(X)
+
+Request  doplan     : doplan( PATH, STEPTIME )
+Reply doplandone    : doplandone( ARG )    for doplan
+Reply doplanfailed  : doplanfailed( ARG )  for doplan
+
+Request step       : step(TIME)
+Reply stepdone     : stepdone(V)                 for step
+Reply stepfailed   : stepfailed(DURATION, CAUSE) for step
+
+Request moverobot    :  moverobot(TARGETX, TARGETY, STEPTIME)
+Reply moverobotdone  :  moverobotok(ARG)                    for moverobot
+Reply moverobotfailed:  moverobotfailed(PLANDONE, PLANTODO) for moverobot
+
+Request tuneAtHome : tuneAtHome(X)
+Reply tuneDone : tuneDone(X) for tuneAtHome
+
+Event alarm           : alarm(X)
+//-----------------------------
+
+
+
+///////////////////
+//REQ CARGOSERVICE
+///////////////////
+Request 	richiestaCarico 			:	richiestaCarico(PID)
+Reply		richiestaCaricoAccettata	:	richiestaCaricoAccettata(ESITO) for richiestaCarico
+Reply		richiestaCaricoRifiutata	:	richiestaCaricoRifiutata(ESITO) for richiestaCarico
+
+
+///////////////////
+//MALFUNZIONAMENTO
+///////////////////
+Event		rilevazioneAnomalia			:	rilevazioneAnomalia(X)
+Event		risoluzioneAnomalia			:	risoluzioneAnomalia(X)
+           
+//////////////////
+//DAL SONAR
+//////////////////
+Event 		containerRilevato			:	containerRilevato(X)
+
+//////////////////
+//INTERNI
+//////////////////
+Dispatch	endLocal					:	endLocal(X)
+
+
+///////////////////
+//PRODUCTSERVICE
+///////////////////
+Request createProduct : product(String)                     //String JSON '{"productId":31,"name":"p31","weight":311}'
+Reply   createdProduct: productid(ID) for createProduct   //String JSON
+
+Request getProduct : product( ID )    
+Reply   getProductAnswer: product( JSonString ) for getProduct 
+
+
+////////////////////
+//CARGOROBOT
+////////////////////
+Request		richiestaCaricamentoSlot : richiestaCaricamentoSlot(TARGETX, TARGETY)
+Reply		slotCaricato : slotCaricato(X) for richiestaCaricamentoSlot
+Reply		caricamentoFallito : caricamentoFallito(X) for richiestaCaricamentoSlot
+
+
+////////////////////
+//PER TEST
+////////////////////
+Request		resetStiva				: resetStiva(X)
+Reply		esitoResetStiva			: esitoResetStiva(X) for resetStiva
+
+
+
+Event		rilevazioneDistanza		:	rilevazioneDistanza(X)
+Event		rilDistContainer		:	rilDistContainer(X)
+Event		rilDistAnomalia			:	rilDistAnomalia(X)
+Event		rilDistVuoto			:	rilDistFineAnomalia(X)
+  
+///////////////////
+//MALFUNZIONAMENTO
+///////////////////
+Event		rilevazioneAnomalia			:	rilevazioneAnomalia(X)
+Event		risoluzioneAnomalia			:	risoluzioneAnomalia(X)
+            
+//////////////////
+//RILEVAZIONE CONTAINER
+//////////////////
+Event 		containerRilevato			:	containerRilevato(X)
+
+//INTERNI
+Dispatch 	continue : continue(X)
+
+
+
+//////////////////
+//RESOURCE
+//////////////////
+Dispatch 	statoStiva : statoStiva(STATO)
+
+
+//CTXs
+Context ctx_productservice	ip[host="productservice" port=8111]
+Context ctx_cargorobot		ip[host="cargorobot" port=9092]
+Context ctx_basicrobot 		ip[host="basicrobot" port=8020]
+Context ctx_client 			ip[host="client" port=10000]
+Context ctx_cargoservice	ip[host="client" port=9091]
+Context ctx_ioport			ip[host="client" port=9093]
+Context ctx_webgui			ip[host="client" port=9094]
+
+ExternalQActor productservice context ctx_productservice
+ExternalQActor basicrobot context ctx_basicrobot
+
+QActor cargorobot context ctx_cargorobot{
+	import "main.java.model.*"
+	
+	[#
+		var CurrentSlot: Slot? = null
+		
+		var LastDestinationX = -1
+		var LastDestinationY = -1
+		
+		val RobotStepTime = 360
+	#]
+	
+	/////////////////
+	//INIT
+	/////////////////
+	State init initial{	
+		println("$name: STARTING...") color cyan
+		
+		//engage basicrobot
+		request basicrobot -m engage : engage($MyName, $RobotStepTime)
+	}
+	Transition t0
+		whenReply engagedone -> initDone
+		whenReply engagerefused -> initFailed
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomaliaIdle
+	
+	State initFailed{
+		println("$name: basicrobot engaging problem... shutting down") color cyan
+		[# System.exit(1) #]
+	}
+	
+	State initDone{
+		forward basicrobot -m setplanbuildelay : setplanbuildelay(0)
+		println("$name: basicrobot engaged correctly") color cyan
+	}
+	Goto waitRequests
+	
+	
+	
+	////////////////////
+	//WAIT REQS
+	////////////////////
+	State waitRequests{
+		//I wasn't looking for a project this year
+		
+		[#
+			LastDestinationX = -1
+			LastDestinationY = -1
+		#]
+		
+		/*
+		[# val MOCKSLOT = "'" + (Slot("s1", 3, 4, 3, 5).toString()) + "'" #]
+		autorequest richiestaCaricamentoSlot : richiestaCaricamentoSlot($MOCKSLOT)
+		*/
+	}
+	Transition t0
+		whenRequest richiestaCaricamentoSlot -> processRichiestaCaricamentoSlot
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomaliaIdle
+	
+	State processRichiestaCaricamentoSlot{
+		onMsg(richiestaCaricamentoSlot : richiestaCaricamentoSlot(SlotJson)){
+			[#
+				val SlotJson = payloadArg(0).toString()
+				CurrentSlot = Slot(SlotJson)
+			#]
+			
+			println("$name: $CurrentSlot") color cyan
+		}
+	}
+	Goto goToIOPort
+	
+	/////////////////////
+	//LOADING CONTAINER
+	/////////////////////
+	
+	//To IOPort
+	State goToIOPort{
+		//But my cargorobot said I shouldn't fear
+		
+		println("$name: going to IOPort...") color cyan
+		[#
+			LastDestinationX = 4
+			LastDestinationY = 0
+		#]
+		delay 1000
+		request basicrobot -m moverobot : moverobot(4, 0, $RobotStepTime)
+	}
+	Transition t0
+		whenReply moverobotdone -> atIOPort
+		whenReply moverobotfailed -> moveFailed
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomaliaMoving
+		
+	State atIOPort{
+		delay 2000
+	}
+	Goto goToSlot
+		
+	//To Slot
+	State goToSlot{
+		//When I met it I found it a little weird
+		
+		[#
+			val SlotPosX = CurrentSlot!!.getPosX()
+			val SlotPosY = CurrentSlot!!.getPosY()
+			
+			LastDestinationX = CurrentSlot!!.getLoadingPosX()
+			LastDestinationY = CurrentSlot!!.getLoadingPosY()
+		#]
+		
+		println("$name: going to slot ($SlotPosX, $SlotPosY) ($LastDestinationX, $LastDestinationY)...") color cyan
+		
+		request basicrobot -m moverobot : moverobot($LastDestinationX, $LastDestinationY, $RobotStepTime)
+	}
+	Transition t0
+		whenReply moverobotdone -> atSlot
+		//whenReply moverobotfailed -> atSlot//moveFailed
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomaliaMoving
+	
+	State atSlot{
+		delay 2000
+	}
+	Goto goToHome
+	
+	//To Home
+	State goToHome{
+		//But then my QAK would reassure me
+		
+		[#
+			CurrentSlot = null
+		#]
+		println("$name: going to HOME...") color cyan
+		replyTo richiestaCaricamentoSlot with slotCaricato : slotCaricato(0)
+		[#
+			LastDestinationX = 0
+			LastDestinationY = 0
+		#]
+		request basicrobot -m moverobot : moverobot(0, 0, 340)
+	}
+	Transition t0
+		whenReply moverobotdone -> atHome
+		whenReply moverobotfailed -> moveFailed
+		whenRequest richiestaCaricamentoSlot -> serviRichiestaPrimaDiHome
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomaliaMoving
+	
+	
+	State atHome{
+		request basicrobot -m tuneAtHome : tuneAtHome(ok)
+	}
+	Transition t0
+		whenReply tuneDone -> waitRequests
+	
+	/////////////////////
+	//REQ PRIMA DI RAGGIUNGERE LA HOME
+	/////////////////////
+	State serviRichiestaPrimaDiHome{
+		println("$name: ricevuta una richiesta prima di arrivare alla HOME") color cyan
+		
+		[#
+			LastDestinationX = -1
+			LastDestinationY = -1
+		#]
+		delay 500
+		emit alarm : alarm(0)
+		onMsg(richiestaCaricamentoSlot : richiestaCaricamentoSlot(SlotJson)){
+			[#
+				val SlotJson = payloadArg(0).toString()
+				CurrentSlot = Slot(SlotJson)
+			#]
+		}
+	}
+	Transition t0
+		whenTime 2000 -> goToIOPort	//caso raro in cui l'alarm arrivi al basicrobot mentre sta calcolando il percorso e perciò non risponda
+		whenReply moverobotfailed -> goToIOPort
+		whenReply moverobotdone -> goToIOPort	
+	
+	
+	
+	/////////////////////
+	//GESTIONE MALFUNZIONAMENTO
+	/////////////////////
+	State handleAnomaliaIdle{
+		[# 
+			LastDestinationX = -1 
+			LastDestinationY != -1 
+		#]
+		println("$name: rilevazione anomalia...") color cyan
+	}
+	Goto anomaliaInCorso
+	
+	State handleAnomaliaMoving{
+		println("$name: rilevazione anomalia...") color cyan
+		emit alarm : alarm(0)
+	}
+	Transition t0
+		whenTime 2000 -> anomaliaInCorso
+		whenEvent risoluzioneAnomalia -> risoluzioneAnomaliaPrimaDiRisposta
+		whenReply moverobotfailed -> anomaliaInCorso
+		whenReply moverobotdone -> anomaliaInCorso	
+	
+	State anomaliaInCorso{
+		
+	}
+	Transition t0
+		whenEvent risoluzioneAnomalia -> resumeFromAnomalia
+	
+	State risoluzioneAnomaliaPrimaDiRisposta{
+		
+	}
+	Transition t0
+		whenTime 2000 -> resumeFromAnomalia
+		whenReply moverobotfailed -> resumeFromAnomalia
+		whenReply moverobotdone -> resumeFromAnomalia	
+	
+	State resumeFromAnomalia{
+		println("$name: anomalia risolta...") color cyan
+		if [# LastDestinationX != -1 && LastDestinationY != -1 #]{
+			request basicrobot -m moverobot : moverobot($LastDestinationX, $LastDestinationY, $RobotStepTime)
+		}
+		
+		returnFromInterrupt
+	}
+
+	
+	/////////////////////
+	//GESTIONE MOVEFAILED
+	/////////////////////
+	State moveFailed{
+		replyTo richiestaCaricamentoSlot with caricamentoFallito : caricamentoFallito(1)
+	}
+	Goto waitRequests
+}
+
+
+QActor cargoservice context ctx_cargoservice {	
+	import "main.java.model.*" 
+	import "java.io.IOException"
+	
+	[#
+		val MAX_LOAD = System.getenv("MAX_LOAD").toIntOrNull() ?: -1
+		if(MAX_LOAD<=0){
+			System.out.println("La variabile d'ambinete MAX_LOAD non è settata correttamente o è un numero <=0")
+			System.exit(1)
+		}
+		
+		var slotMap: SlotMap? = null
+		try{
+			slotMap = CargoSlotMap("slotmap-conf.json")
+		}
+		catch(e: IOException){
+			System.exit(1)
+		}
+		var currentProduct: Product? = null
+		var currentSlot: Slot? = null
+	#]
+	
+	State init initial {
+		println("$name: STARTING...") color red
+		updateResource [# slotMap.toString() #]
+	}
+	Goto wait_requests 
+
+
+	///////////////////
+	//IDLE
+	///////////////////
+	State wait_requests{
+		println("$name: in attesa di richieste...") color red
+	}
+	Transition t0
+		whenRequest richiestaCarico -> elaboraRichiesta
+		whenRequest resetStiva -> handleResetStiva
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+		
+	///////////////////
+	//REQ TO PS
+	///////////////////
+	State elaboraRichiesta{
+		onMsg(richiestaCarico : richiestaCarico(PID)){
+			[#
+				val ID = payloadArg(0).toInt()
+			#]
+			println("$name: ricevuta richiesta di caricamento per il prodotto $ID") color red
+			request productservice -m getProduct : product($ID)
+		}
+	}
+	Transition t0
+		whenReply getProductAnswer -> datiProdottoRicevuti
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+		
+	State datiProdottoRicevuti{
+		onMsg(getProductAnswer : product(JSonString)){
+			[#
+				val JsonString = payloadArg(0).toString()
+				currentProduct = Product(JsonString)
+			#]
+			
+			if[# currentProduct!!.getProductId() <= 0 #]{	//ERRORE
+				println("$name: il prodotto richiesto non esiste") color red
+				[# val Esito = "'Prodotto non esistente'"#]
+				replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata($Esito)
+				autodispatch endLocal : endLocal(0)
+			}
+		}
+	}
+	Transition t0
+		whenTime 10 -> assegnamentoSlot
+		whenMsg endLocal -> wait_requests
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+	
+	
+	////////////////////
+	//ASSEGNAMENTO SLOT
+	////////////////////
+	State assegnamentoSlot{
+		println("$name: recuperati i dati del prodotto") color red
+		if[# !slotMap!!.isAnySlotEmpty() #]{
+			println("$name: richiesta rifiutata, nessuno slot disponibile") color red
+			[# val Esito = "'Nessuno slot disponibile'"#]
+			replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata($Esito)
+			autodispatch endLocal : endLocal(0)
+		}
+		else {
+			if[# slotMap!!.getTotalWeight() + currentProduct!!.getWeight() > MAX_LOAD #]{
+				println("$name: richiesta rifiutata, peso eccessivo") color red
+				[# val Esito = "'Il prodotto eccede il peso massimo della stiva'"#]
+				replyTo richiestaCarico with richiestaCaricoRifiutata : richiestaCaricoRifiutata($Esito)
+				autodispatch endLocal : endLocal(0)
+			}
+			else{
+				[# 
+					currentSlot = slotMap!!.getFirstEmptySlot()
+					slotMap!!.putProductIntoSlot(currentSlot, currentProduct)
+					val Esito = "'OK'"
+				#]
+				println("$name: prodotto assegnato allo slot $currentSlot") color red
+				replyTo richiestaCarico with richiestaCaricoAccettata : richiestaCaricoAccettata($Esito)
+			}
+		}
+		[#
+			currentProduct = null	
+		#]
+	}
+	Transition t0
+		whenTime 10 -> waitContainer
+		whenMsg endLocal -> wait_requests
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+		
+		
+	
+	
+	State waitContainer{
+		println("$name: in attesa che il container venga messo davanti all'IOPort") color red
+	}
+	Transition t0
+		whenEvent containerRilevato -> caricaProdotto
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+	
+	
+	////////////////////
+	//REQ AL CARGOROBOT
+	////////////////////
+	State caricaProdotto{
+		println("$name: caricamento prodotto da parte del cargorobot iniziato") color red
+		[#
+			val SlotJson = "\'" + currentSlot.toString() + "\'" 
+			currentSlot=null
+		#]
+		request cargorobot -m richiestaCaricamentoSlot : richiestaCaricamentoSlot($SlotJson)
+	}
+	Transition t0
+		whenReply slotCaricato -> caricamentoTerminato
+		whenReply caricamentoFallito -> problemaCaricamento
+		whenInterruptEvent rilevazioneAnomalia -> handleAnomalia
+		
+	State caricamentoTerminato{
+		println("$name: caricamento del prodotto nello slot completato correttamente") color red
+	}
+	Goto wait_requests
+	
+	State problemaCaricamento{
+		println("$name: problema nel caricamento da parte del cargorobot") color red
+	}
+	Goto wait_requests
+	
+	
+	/////////////////////
+	//GESTIONE MALFUNZIONAMENTO
+	/////////////////////
+	State handleAnomalia{
+		println("$name: rilevazione anomalia...") color red
+	}
+	Transition t0
+		whenEvent risoluzioneAnomalia -> resumeFromAnomalia
+	
+	State resumeFromAnomalia{
+		println("$name: anomalia risolta...") color red
+		returnFromInterrupt
+	}
+	
+	
+	/////////////////////
+	//PER TEST
+	/////////////////////
+	State handleResetStiva{
+		[# slotMap = CargoSlotMap() #]
+		replyTo resetStiva with esitoResetStiva : esitoResetStiva(0)
+	}
+	Goto wait_requests
+	
+		
+}
+
+
+QActor lettore_sonar_fisico context ctx_ioport{
+	import "java.io.*"
+	import "main.java.utils.*"
+	
+	
+	[#
+		val PYTHON_CMD = System.getenv("PYTHON_CMD") ?: ""
+		if(PYTHON_CMD.equals("")){
+			System.out.println("La variabile d'ambiente PYTHON_CMD non è impostata")
+			System.exit(1)
+		}
+		
+		val SONAR_SCRIPT_PATH = System.getenv("SONAR_SCRIPT_PATH") ?: ""
+		if(SONAR_SCRIPT_PATH.equals("")){
+			System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH non è impostata")
+			System.exit(1)
+		}
+		
+		if(!File(SONAR_SCRIPT_PATH).isFile()){
+			System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH contiene un percorso inesistente")
+			System.exit(1)
+		}
+		
+		val process = Runtime.getRuntime().exec(PYTHON_CMD + " -u " + SONAR_SCRIPT_PATH) 
+    	val reader = BufferedReader(InputStreamReader(process.inputStream))
+    	
+    	
+	#]
+	 
+	State init initial{
+		println("$name: STARTING...") color yellow
+		
+	}
+	Goto working
+	
+	State working{
+		[#
+			val line = reader.readLine()
+			
+			if(line == null){
+				System.out.println("Problema rilevamento distanza")
+				System.exit(1)
+			}
+			
+			val D = line.toDoubleOrNull() ?: -1.0
+			
+			if(D<0){
+				System.out.println("Problema rilevamento distanza")
+				System.exit(1)
+			}
+			
+		#]
+		
+		//println("$name: D=${D}") color yellow
+		
+		emitlocalstream rilevazioneDistanza : rilevazioneDistanza($D)
+	}
+	Goto working
+}
+
+
+
+
+
+
+QActor sonar context ctx_ioport{
+	
+	import "main.java.utils.*"
+	
+	[#
+		
+		val DFREE_CALIBRATION_FLAG = ProcessUtils.getIntEnvVar("DFREE_CALIBRATION_FLAG").orElse(0)
+		var DFREE = -1.0
+		if(DFREE_CALIBRATION_FLAG == 0){
+			DFREE = ProcessUtils.getDoubleEnvVar("DFREE").orElse(-1.0)
+			if(DFREE<0.0){
+				println("Variabile d'ambiente DFREE non presente o errata")
+				System.exit(1)
+			}
+		}
+		
+		val SONAR_MIS_PER_SEC=ProcessUtils.getIntEnvVar("SONAR_MIS_PER_SEC").orElse(-1)
+
+		if(SONAR_MIS_PER_SEC<0){
+			println("Variabile d'ambiente SONAR_MIS_PER_SEC non presente o errata")
+			System.exit(1)
+		}
+		
+		val TargetCounterCalibrazione = SONAR_MIS_PER_SEC * 10
+		
+		var counterCalibrazione = 0
+	#]
+	
+	State init initial{
+		println("$name: STARTING...") color yellow
+		
+		if [# DFREE_CALIBRATION_FLAG == 0 #]{
+			println("$name: DFREE=${DFREE}") color yellow
+		}
+		
+		subscribeTo lettore_sonar_fisico for rilevazioneDistanza
+	}
+	Transition t0
+		whenEvent rilevazioneDistanza and [# DFREE_CALIBRATION_FLAG == 0 #] -> waitMisurazioni
+		whenEvent rilevazioneDistanza and [# DFREE_CALIBRATION_FLAG == 1 #] -> calibrazione
+	
+	
+	State calibrazione{
+		onMsg(rilevazioneDistanza : rilevazioneDistanza(X)){
+			[#
+				val D = payloadArg(0).toDouble()
+			#]
+			
+			println("$name: calibrazione in corso [${counterCalibrazione}/${TargetCounterCalibrazione}]...") color yellow
+			if [# counterCalibrazione < TargetCounterCalibrazione #]{
+				[#
+					if(D > DFREE){
+						DFREE = D
+					}
+					counterCalibrazione += 1
+				#]
+			}
+			else{
+				[#
+					//DFREE = DFREE/TargetCounterCalibrazione
+				#]
+				autodispatch continue : continue(1)
+			}
+			
+		}
+	}
+	Transition t0
+		whenMsg continue -> endCalibrazione
+		whenEvent rilevazioneDistanza -> calibrazione
+	
+	State endCalibrazione{
+		println("$name: calibrazione terminata, DFREE=${DFREE}") color yellow
+	}
+	Transition t0
+		whenEvent rilevazioneDistanza -> waitMisurazioni
+	
+	State waitMisurazioni {
+		onMsg(rilevazioneDistanza : rilevazioneDistanza(X)){
+			[#
+				val D = payloadArg(0).toDouble()
+			#]
+			
+			println("$name: ricevuto D=${D}") color yellow
+			
+			if [# D <= DFREE/2 #] {
+				emitlocalstream rilDistContainer : rilDistContainer(1)
+			}
+			else{
+				if [# D > DFREE #] {
+					emitlocalstream rilDistAnomalia : rilDistAnomalia(1)
+				}
+				else{
+					emitlocalstream rilDistVuoto : rilDistVuoto(1)
+				}
+			}
+			
+		}
+	}
+	Transition t0
+		whenEvent rilevazioneDistanza -> waitMisurazioni
+}
+
+
+
+
+
+
+
+
+
+QActor ioport context ctx_ioport{
+	
+	import "main.java.utils.*"
+	
+	[# 
+		var contatore = 0 
+	
+		
+		val RIL_CONTAINER_SECS=ProcessUtils.getIntEnvVar("RIL_CONTAINER_SECS").orElse(3)
+		val RIL_ANOMALIA_SECS=ProcessUtils.getIntEnvVar("RIL_ANOMALIA_SECS").orElse(3)
+		val SONAR_MIS_PER_SEC=ProcessUtils.getIntEnvVar("SONAR_MIS_PER_SEC").orElse(-1)
+
+		if(SONAR_MIS_PER_SEC<0){
+			println("Variabile d'ambiente SONAR_MIS_PER_SEC non presente o errata")
+			System.exit(1)
+		}
+		
+		val ContainerCounterTarget = SONAR_MIS_PER_SEC * RIL_CONTAINER_SECS
+		val AnomaliaTargetCounter = SONAR_MIS_PER_SEC * RIL_ANOMALIA_SECS
+		
+	
+	#]
+	
+	State init initial{
+		println("$name: STARTING...") color yellow
+		
+		subscribeTo sonar for rilDistContainer
+		subscribeTo sonar for rilDistAnomalia
+		subscribeTo sonar for rilDistVuoto
+	}
+	Goto ioportVuota
+	
+	State ioportVuota{
+		println("$name: ioport vuota...") color yellow
+	}
+	Transition t0
+		whenEvent rilDistContainer -> resetPerContainer
+		whenEvent rilDistAnomalia -> resetPerAnomalia
+	
+	
+	
+	State resetPerContainer{
+		[# contatore = 0 #]
+	}
+	Goto checkContainer
+	
+	State checkContainer{
+		[# contatore += 1 #]
+		if [# contatore == ContainerCounterTarget #]{
+			[# contatore = 0 #]
+			emit containerRilevato : containerRilevato(1)
+			autodispatch continue : continue(1)
+		}
+	}
+	Transition t0
+		whenMsg continue -> containerRilevato
+		whenEvent rilDistContainer -> checkContainer
+		whenEvent rilDistAnomalia -> resetPerAnomalia
+		whenEvent rilDistVuoto -> ioportVuota
+		
+	State containerRilevato{
+		println("$name: container rilevato") color yellow
+	}
+	Transition t0
+		whenEvent rilDistAnomalia -> resetPerAnomalia
+		whenEvent rilDistVuoto -> ioportVuota
+	
+	
+	State resetPerAnomalia{
+		[# contatore = 0 #]
+	}
+	Goto checkAnomalia
+	
+	State checkAnomalia{
+		[# contatore += 1 #]
+		if [# contatore == AnomaliaTargetCounter #]{
+			[# contatore = 0 #]
+			emit rilevazioneAnomalia : rilevazioneAnomalia(1)
+			autodispatch continue : continue(1)
+		}
+	}
+	Transition t0
+		whenMsg continue -> anomalia
+		whenEvent rilDistContainer -> resetPerContainer
+		whenEvent rilDistAnomalia -> checkAnomalia
+		whenEvent rilDistVuoto -> ioportVuota
+	
+	State anomalia{
+		println("$name: anomalia in corso") color yellow
+	}
+	Transition t0
+		whenEvent rilDistVuoto -> fineAnomalia
+		
+	State fineAnomalia{
+		println("$name: fine anomalia") color yellow
+		emit risoluzioneAnomalia : risoluzioneAnomalia(1)
+	}
+	Goto ioportVuota
+	
+}
+
+
+
+
+
+QActor led context ctx_ioport{
+	import "java.io.*"
+	import "main.java.utils.*"
+	
+	[#
+		val PYTHON_CMD = System.getenv("PYTHON_CMD") ?: ""
+		if(PYTHON_CMD.equals("")){
+			System.out.println("La variabile d'ambiente PYTHON_CMD non è impostata")
+			System.exit(1)
+		}
+		
+		val LED_ON_SCRIPT_PATH = System.getenv("LED_ON_SCRIPT_PATH") ?: ""
+		val LED_OFF_SCRIPT_PATH = System.getenv("LED_OFF_SCRIPT_PATH") ?: ""
+		if(LED_ON_SCRIPT_PATH.equals("") || LED_OFF_SCRIPT_PATH.equals("")){
+			System.out.println("Le variabili d'ambiente LED_ON_SCRIPT_PATH e LED_OFF_SCRIPT_PATH non sono impostate")
+			System.exit(1)
+		}
+		
+		if(!File(LED_ON_SCRIPT_PATH).isFile() || !File(LED_OFF_SCRIPT_PATH).isFile()){
+			System.out.println("Le variabili d'ambiente LED_ON_SCRIPT_PATH e LED_OFF_SCRIPT_PATH contengono percorsi inesistenti")
+			System.exit(1)
+		}
+		 
+	#]
+	
+	
+	State init initial{
+		println("$name: STARTING...") color yellow
+	}
+	Goto ledOff
+	 
+	State ledOff{
+		//spegnimento led
+		[# 
+			val process = Runtime.getRuntime().exec(PYTHON_CMD+" "+LED_OFF_SCRIPT_PATH)
+			val ledFisicoMsg = "led fisico: " + ProcessUtils.readAllStdOutput(process)
+		#]
+		println(ledFisicoMsg) color yellow
+		
+		println("$name: led spento") color yellow
+	}
+	Transition t0
+		whenEvent rilevazioneAnomalia -> ledOn
+		
+	
+	State ledOn{
+		//accensione led
+		[# 
+			val process = Runtime.getRuntime().exec(PYTHON_CMD+" "+LED_ON_SCRIPT_PATH)
+			val ledFisicoMsg = "led fisico: " + ProcessUtils.readAllStdOutput(process)
+		#]
+		println(ledFisicoMsg) color yellow
+		println("$name: led acceso") color yellow
+	}
+	Transition t0
+		whenEvent risoluzioneAnomalia -> ledOff	
+}
+
+QActor webgui context ctx_webgui{
+	State init initial{
+		observeResource cargoservice msgid statoStiva
+	}
+	Transition t0
+	 whenMsg statoStiva -> init
+}
+
+QActor client_esterno context ctx_client{
+	State init initial{
+		request productservice -m createProduct : createProduct(X)
+		request cargoservice -m richiestaCaricamentoSlot : richiestaCaricamentoSlot(1)
+	}
+	Transition t0
+		whenReply richiestaCaricoAccettata -> init
+		whenReply richiestaCaricoRifiutata -> init
+}
