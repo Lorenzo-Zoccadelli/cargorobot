@@ -14,3 +14,8 @@ docker-compose -f nomefile.yaml up
 
 NOTA: una volta fatti i container il cargorobot va fatto partire dopo che il basicrobot è partito se no prima non trova il basicrobot e poi non riesce a ingaggiarlo
 
+per backend gui:
+docket build -t webgui-backend:1.0 .
+
+per tutta la gui (dopo docker build)(dentro la cartella opportuna dentro deployment):
+docker-compose -f webgui.yaml up
