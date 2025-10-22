@@ -14,7 +14,7 @@ public class CargoserviceCoAPObserver {
     private final CoapClient client;
     private final StivaWS ws;
     
-    private static final String coapUrl = "coap://localhost:9091/ctx_cargoservice/cargoservice";
+    private static final String coapUrl = "coap://cargoservice:9091/ctx_cargoservice/cargoservice";
 
     @Autowired
     public CargoserviceCoAPObserver(StivaWS ws) {

@@ -223,7 +223,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("handleResetStiva") { //this:State
 					action { //it:State
-						 slotMap = CargoSlotMap()  
+						 slotMap = CargoSlotMap("slotmap-conf.json")  
 						updateResourceRep( slotMap.toString()  
 						)
 						answer("resetStiva", "esitoResetStiva", "esitoResetStiva(0)"   )  

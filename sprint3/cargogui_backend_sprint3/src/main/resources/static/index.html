@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Slot Monitor</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #f4f4f4; }
+    .null { color: #aaa; }
+  </style>
+</head>
+<body>
+  <h1>Slot Monitor</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Slot Name</th>
+        <th>Position</th>
+        <th>Loading Position</th>
+        <th>Product ID</th>
+        <th>Product Name</th>
+        <th>Weight</th>
+      </tr>
+    </thead>
+    <tbody id="slotTableBody">
+      <!-- Righe generate dinamicamente -->
+    </tbody>
+  </table>
+
+  <script>
+    const tableBody = document.getElementById("slotTableBody");
+
+    // Cambia la porta e path se necessario
+    const socket = new WebSocket("ws://localhost:9094/ws/stiva");
+
+    socket.onopen = () => console.log("WebSocket connesso");
+    socket.onclose = () => console.log("WebSocket chiuso");
+
+    socket.onmessage = (event) => {
+		console.log(event.data)
+      const data = JSON.parse(event.data); // JSON tipo slotMap
+		console.log(data)
+      tableBody.innerHTML = ""; // svuota la tabella
+
+      for (const key in data.slotMap) {
+        const entry = data.slotMap[key];
+        const slot = entry?.slot || {};
+        const product = entry?.product || {};
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${slot.name || "-"}</td>
+          <td>${slot.posX ?? "-"}, ${slot.posY ?? "-"}</td>
+          <td>${slot.loadingPosX ?? "-"}, ${slot.loadingPosY ?? "-"}</td>
+          <td class="${product.productId == null ? "null" : ""}">${product.productId ?? "-"}</td>
+          <td class="${product.name == null ? "null" : ""}">${product.name ?? "-"}</td>
+          <td class="${product.weight == null ? "null" : ""}">${product.weight ?? "-"}</td>
+        `;
+        tableBody.appendChild(tr);
+      }
+    };
+  </script>
+</body>
+</html>

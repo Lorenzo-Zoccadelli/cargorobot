@@ -1,0 +1,20 @@
+services:
+
+  webgui-backend:
+    container_name: webgui-backend
+    image: webgui-backend:1.0
+    ports:
+      - 9094:9094/tcp
+      - 9094:9094/udp
+    networks:
+      - iss-network
+    
+networks:
+  iss-network:
+    external: true
+
+## yamls> docker network ls
+## docker network create iss-network
+## docker network rm xxx
+## docker-compose -f webgui.yaml up
+## docker compose -f webgui.yaml up

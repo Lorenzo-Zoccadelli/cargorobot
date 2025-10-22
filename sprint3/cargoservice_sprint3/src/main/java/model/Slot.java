@@ -2,6 +2,9 @@ package main.java.model;
 
 import java.util.Objects;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import main.java.utils.JsonUtils;
 
 public class Slot {
@@ -95,7 +98,6 @@ public class Slot {
 				.replace("NAME", "\""+name+"\"").replace("POSX", ""+posX).replace("POSY", ""+posY).
 				replace("LX",""+loadingPosX).replace("LY",""+loadingPosY);
 	}
-	
 	
 	
 	

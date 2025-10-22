@@ -15,14 +15,14 @@
         "loadingPosY": 0
     },
     {
-        "name": "Slot1",
+        "name": "Slot3",
         "posX": 1,
         "posY": 4,
         "loadingPosX": 1,
         "loadingPosY": 5
     },
     {
-        "name": "Slot1",
+        "name": "Slot4",
         "posX": 3,
         "posY": 4,
         "loadingPosX": 3,

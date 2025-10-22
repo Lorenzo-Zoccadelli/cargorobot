@@ -69,6 +69,10 @@ public abstract class SlotMap {
 	@Override
 	public String toString() {
 		Gson g = new GsonBuilder().serializeNulls().create();
-		return g.toJson(this);
+		Map<String, Product> m = new HashMap<>();
+		for(var key : slotMap.keySet()) {
+			m.put(key.getName(), slotMap.get(key));
+		}
+		return g.toJson(m);
 	}
 }

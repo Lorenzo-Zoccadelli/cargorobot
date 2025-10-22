@@ -231,7 +231,7 @@ QActor cargoservice context ctx_cargoservice {
 	//PER TEST
 	/////////////////////
 	State handleResetStiva{
-		[# slotMap = CargoSlotMap() #]
+		[# slotMap = CargoSlotMap("slotmap-conf.json") #]
 		//println("$name: slotMap json = $slotMap") color red
 		updateResource [# slotMap.toString() #]
 		replyTo resetStiva with esitoResetStiva : esitoResetStiva(0)

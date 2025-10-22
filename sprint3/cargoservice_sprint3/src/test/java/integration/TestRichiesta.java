@@ -27,14 +27,15 @@ public class TestRichiesta {
 
 		 IApplMessage richiesta, ans;
 		 
+		 /*
 		 richiesta = CommUtils.buildRequest(freecaller, "resetStiva", 
 				 "resetStiva(1)", "cargoservice");
 		 ans = conn.request(richiesta);
 		 System.out.println(ans.msgContent());
-
+		 */
 		 
 		 richiesta = CommUtils.buildRequest(freecaller, "richiestaCarico", 
-				 "richiestaCarico(5)", "cargoservice");
+				 "richiestaCarico(1)", "cargoservice");
 		 ans = conn.request(richiesta);
 		 System.out.println(ans);
 		 

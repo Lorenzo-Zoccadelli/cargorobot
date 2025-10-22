@@ -14,8 +14,8 @@ public class CargoSlotMap extends SlotMap{
 		super();
 		addSlot(new Slot("Slot1", 1, 1, 1, 0));
 		addSlot(new Slot("Slot2", 3, 1, 3, 0));
-		addSlot(new Slot("Slot1", 1, 4, 1, 5));
-		addSlot(new Slot("Slot1", 3, 4, 3, 5));
+		addSlot(new Slot("Slot3", 1, 4, 1, 5));
+		addSlot(new Slot("Slot4", 3, 4, 3, 5));
 	}
 
 	public CargoSlotMap(String jsonFileName) throws IOException {

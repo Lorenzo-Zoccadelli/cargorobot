@@ -3,10 +3,11 @@ plugins {
 	id 'eclipse'
 	id 'org.springframework.boot' version '3.5.6'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'distribution'
 }
 
 group = 'it.unibo'
-version = '0.0.1-SNAPSHOT'
+version = '1.0'
 description = 'Backend for cargo web-gui'
 
 java {
@@ -33,3 +34,23 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+/*
+tasks.register('distTar', Tar) {
+    archiveFileName = "webgui-backend.tar"
+    destinationDirectory = file("$buildDir/distributions")
+
+    from(tasks.bootJar) {
+        rename { "webgui-backend.jar" }  
+    }
+}
+*/
+
+distributions {
+    main {
+        contents {
+            from(tasks.bootJar) // includi il jar eseguibile
+        }
+    }
+}
+
+
