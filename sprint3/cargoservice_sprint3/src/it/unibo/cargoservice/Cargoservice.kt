@@ -51,6 +51,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				state("init") { //this:State
 					action { //it:State
 						CommUtils.outred("$name: STARTING...")
+						updateResourceRep( slotMap.toString()  
+						)
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -133,6 +135,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 						  					currentSlot = slotMap!!.getFirstEmptySlot()
 						  					slotMap!!.putProductIntoSlot(currentSlot, currentProduct)
 						  					val Esito = "'OK'"
+						  updateResourceRep( slotMap.toString()  
+						  )
 						  CommUtils.outred("$name: prodotto assegnato allo slot $currentSlot")
 						  answer("richiestaCarico", "richiestaCaricoAccettata", "richiestaCaricoAccettata($Esito)"   )  
 						  }
@@ -220,6 +224,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				state("handleResetStiva") { //this:State
 					action { //it:State
 						 slotMap = CargoSlotMap()  
+						updateResourceRep( slotMap.toString()  
+						)
 						answer("resetStiva", "esitoResetStiva", "esitoResetStiva(0)"   )  
 						//genTimer( actor, state )
 					}

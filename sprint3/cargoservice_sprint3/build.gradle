@@ -124,7 +124,8 @@ dependencies {
     implementation name: 'unibo.basicomm23-1.0'
 
 
-    
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+	implementation 'com.google.code.gson:gson:2.7'
     //USER libs for facades
     
 }

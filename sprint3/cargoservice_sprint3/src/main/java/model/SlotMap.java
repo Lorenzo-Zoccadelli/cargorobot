@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 public abstract class SlotMap {
 	private Map<Slot, Product> slotMap;
 	
@@ -60,5 +63,12 @@ public abstract class SlotMap {
 	
 	public HashMap<Slot, Product> getMap(){
 		return new HashMap<>(slotMap);
+	}
+	
+	
+	@Override
+	public String toString() {
+		Gson g = new GsonBuilder().serializeNulls().create();
+		return g.toJson(this);
 	}
 }

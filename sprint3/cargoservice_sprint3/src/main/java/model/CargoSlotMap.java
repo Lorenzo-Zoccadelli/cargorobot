@@ -37,5 +37,5 @@ public class CargoSlotMap extends SlotMap{
             addSlot(slot);
         }
 	}
-
+	
 }
