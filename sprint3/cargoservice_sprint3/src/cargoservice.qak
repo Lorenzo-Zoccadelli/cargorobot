@@ -83,7 +83,7 @@ QActor cargoservice context ctx_cargoservice {
 	State init initial {
 		println("$name: STARTING...") color red
 		//println("$name: slotMap json = ${slotMap}") color red
-		updateResource [# StatoStivaDTO(slotMap, MAX_LOAD).toString() #]
+		updateResource [# StatoStivaDTO(slotMap!!.getIdMap(), MAX_LOAD).toString() #]
 	}
 	Goto wait_requests 
 
@@ -161,7 +161,7 @@ QActor cargoservice context ctx_cargoservice {
 					val Esito = "'OK'"
 				#]
 				//println("$name: slotMap json = $slotMap") color red
-				updateResource [# StatoStivaDTO(slotMap, MAX_LOAD).toString() #]
+				updateResource [# StatoStivaDTO(slotMap!!.getIdMap(), MAX_LOAD).toString() #]
 				println("$name: prodotto assegnato allo slot $currentSlot") color red
 				replyTo richiestaCarico with richiestaCaricoAccettata : richiestaCaricoAccettata($Esito)
 			}
@@ -234,7 +234,7 @@ QActor cargoservice context ctx_cargoservice {
 	State handleResetStiva{
 		[# slotMap = CargoSlotMap("slotmap-conf.json") #]
 		//println("$name: slotMap json = $slotMap") color red
-		updateResource [# StatoStivaDTO(slotMap, MAX_LOAD).toString() #]
+		updateResource [# StatoStivaDTO(slotMap!!.getIdMap(), MAX_LOAD).toString() #]
 		replyTo resetStiva with esitoResetStiva : esitoResetStiva(0)
 	}
 	Goto wait_requests

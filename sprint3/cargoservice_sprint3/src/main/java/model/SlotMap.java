@@ -65,6 +65,13 @@ public abstract class SlotMap {
 		return new HashMap<>(slotMap);
 	}
 	
+	public HashMap<String, Product> getIdMap(){
+		HashMap<String, Product> m = new HashMap<>();
+		for(var key : slotMap.keySet()) {
+			m.put(key.getName(), slotMap.get(key));
+		}
+		return m;
+	}
 	
 	@Override
 	public String toString() {

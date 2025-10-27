@@ -52,7 +52,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				state("init") { //this:State
 					action { //it:State
 						CommUtils.outred("$name: STARTING...")
-						updateResourceRep( StatoStivaDTO(slotMap, MAX_LOAD).toString()  
+						updateResourceRep( StatoStivaDTO(slotMap!!.getIdMap(), MAX_LOAD).toString()  
 						)
 						//genTimer( actor, state )
 					}
@@ -136,7 +136,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 						  					currentSlot = slotMap!!.getFirstEmptySlot()
 						  					slotMap!!.putProductIntoSlot(currentSlot, currentProduct)
 						  					val Esito = "'OK'"
-						  updateResourceRep( StatoStivaDTO(slotMap, MAX_LOAD).toString()  
+						  updateResourceRep( StatoStivaDTO(slotMap!!.getIdMap(), MAX_LOAD).toString()  
 						  )
 						  CommUtils.outred("$name: prodotto assegnato allo slot $currentSlot")
 						  answer("richiestaCarico", "richiestaCaricoAccettata", "richiestaCaricoAccettata($Esito)"   )  
@@ -225,7 +225,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				state("handleResetStiva") { //this:State
 					action { //it:State
 						 slotMap = CargoSlotMap("slotmap-conf.json")  
-						updateResourceRep( StatoStivaDTO(slotMap, MAX_LOAD).toString()  
+						updateResourceRep( StatoStivaDTO(slotMap!!.getIdMap(), MAX_LOAD).toString()  
 						)
 						answer("resetStiva", "esitoResetStiva", "esitoResetStiva(0)"   )  
 						//genTimer( actor, state )

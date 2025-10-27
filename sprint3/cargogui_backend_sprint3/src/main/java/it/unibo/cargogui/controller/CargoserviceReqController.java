@@ -29,7 +29,6 @@ public class CargoserviceReqController {
 		try {
             conn = ConnectionFactory.createClientSupport23(ProtocolType.tcp, host, port);
         } catch (Exception e) {
-            CommUtils.outred("BasicRobotMovesHelper | ERROR:" + e.getMessage());
             System.exit(1);
         }
 		
@@ -37,12 +36,9 @@ public class CargoserviceReqController {
 		qakReq = CommUtils.buildRequest(freecaller, "richiestaCarico", 
 				 "richiestaCarico(" + richiesta.getProductId() + ")", "cargoservice");
 		ans = conn.request(qakReq);
-		
-		System.out.println(ans);
-		
 		conn.close();
 		
-		return new RispostaDTO();
+		return new RispostaDTO(ans.msgContent().split("\\(")[0], ans.msgContent().split("\\'")[1]);
 		
 	}
 	
