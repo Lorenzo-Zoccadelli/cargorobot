@@ -19,7 +19,7 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
-import main.java.utils.*
+import java.io.*
 
 class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -31,27 +31,23 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-				
-				val DFREE_CALIBRATION_FLAG = ProcessUtils.getIntEnvVar("DFREE_CALIBRATION_FLAG").orElse(0)
-				var DFREE = -1.0
-				if(DFREE_CALIBRATION_FLAG == 0){
-					DFREE = ProcessUtils.getDoubleEnvVar("DFREE").orElse(-1.0)
-					if(DFREE<0.0){
-						println("Variabile d'ambiente DFREE non presente o errata")
-						System.exit(1)
-					}
-				}
-				
-				val SONAR_MIS_PER_SEC=ProcessUtils.getIntEnvVar("SONAR_MIS_PER_SEC").orElse(-1)
-		
-				if(SONAR_MIS_PER_SEC<0){
-					println("Variabile d'ambiente SONAR_MIS_PER_SEC non presente o errata")
+				val PYTHON_CMD = System.getenv("PYTHON_CMD") ?: ""
+				if(PYTHON_CMD.equals("")){
+					System.out.println("La variabile d'ambiente PYTHON_CMD non è impostata")
 					System.exit(1)
 				}
 				
-				val TargetCounterCalibrazione = SONAR_MIS_PER_SEC * 10
+				val SONAR_SCRIPT_PATH = System.getenv("LED_ON_SCRIPT_PATH") ?: ""
+				if(SONAR_SCRIPT_PATH.equals("")){
+					System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH non è impostata")
+					System.exit(1)
+				}
 				
-				var counterCalibrazione = 0
+				if(!File(SONAR_SCRIPT_PATH).isFile()){
+					System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH contiene un percorso inesistente")
+					System.exit(1)
+				}
+				
 		return { //this:ActionBasciFsm
 				state("init") { //this:State
 					action { //it:State
@@ -61,73 +57,6 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t013",targetState="waitMisurazioni",cond=whenEventGuarded("rilevazioneDistanza",{ DFREE_CALIBRATION_FLAG == 0  
-					}))
-					transition(edgeName="t014",targetState="calibrazione",cond=whenEventGuarded("rilevazioneDistanza",{ DFREE_CALIBRATION_FLAG == 1  
-					}))
-				}	 
-				state("calibrazione") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("rilevazioneDistanza(X)"), Term.createTerm("rilevazioneDistanza(X)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-												val D = payloadArg(0).toDouble()
-								CommUtils.outyellow("$name: calibrazione in corso [${counterCalibrazione}/${TargetCounterCalibrazione}]...")
-								if(  counterCalibrazione < TargetCounterCalibrazione  
-								 ){
-													if(D > DFREE){
-														DFREE = D
-													}
-													counterCalibrazione += 1
-								}
-								else
-								 {
-								 					//DFREE = DFREE/TargetCounterCalibrazione
-								 forward("continue", "continue(1)" ,name ) 
-								 }
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t015",targetState="endCalibrazione",cond=whenDispatch("continue"))
-					transition(edgeName="t016",targetState="waitMisurazioni",cond=whenEvent("rilevazioneDistanza"))
-				}	 
-				state("endCalibrazione") { //this:State
-					action { //it:State
-						CommUtils.outyellow("$name: calibrazione terminata, DFREE=${DFREE}")
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t017",targetState="waitMisurazioni",cond=whenEvent("rilevazioneDistanza"))
-				}	 
-				state("waitMisurazioni") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("rilevazioneDistanza(X)"), Term.createTerm("rilevazioneDistanza(X)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-												D = payloadArg(0).toDouble()
-								if(  D <= DFREE/2  
-								 ){emitLocalStreamEvent("rilDistContainer", "rilDistContainer(1)" ) 
-								}
-								else
-								 {if(  D > DFREE  
-								  ){emitLocalStreamEvent("rilDistAnomalia", "rilDistAnomalia(1)" ) 
-								 }
-								 else
-								  {emitLocalStreamEvent("rilDistVuoto", "rilDistVuoto(1)" ) 
-								  }
-								 }
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t018",targetState="waitMisurazioni",cond=whenEvent("rilevazioneDistanza"))
 				}	 
 			}
 		}
