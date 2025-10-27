@@ -148,5 +148,5 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 					}	 	 
 				}	 
 			}
-		}
+		
 } 
