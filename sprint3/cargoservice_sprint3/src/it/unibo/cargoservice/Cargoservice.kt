@@ -20,6 +20,7 @@ import org.json.simple.JSONObject
 
 //User imports JAN2024
 import main.java.model.*
+import main.java.dto.*
 import java.io.IOException
 
 class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
@@ -51,7 +52,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				state("init") { //this:State
 					action { //it:State
 						CommUtils.outred("$name: STARTING...")
-						updateResourceRep( slotMap.toString()  
+						updateResourceRep( StatoStivaDTO(slotMap, MAX_LOAD).toString()  
 						)
 						//genTimer( actor, state )
 					}
@@ -135,7 +136,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 						  					currentSlot = slotMap!!.getFirstEmptySlot()
 						  					slotMap!!.putProductIntoSlot(currentSlot, currentProduct)
 						  					val Esito = "'OK'"
-						  updateResourceRep( slotMap.toString()  
+						  updateResourceRep( StatoStivaDTO(slotMap, MAX_LOAD).toString()  
 						  )
 						  CommUtils.outred("$name: prodotto assegnato allo slot $currentSlot")
 						  answer("richiestaCarico", "richiestaCaricoAccettata", "richiestaCaricoAccettata($Esito)"   )  
@@ -224,7 +225,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				state("handleResetStiva") { //this:State
 					action { //it:State
 						 slotMap = CargoSlotMap("slotmap-conf.json")  
-						updateResourceRep( slotMap.toString()  
+						updateResourceRep( StatoStivaDTO(slotMap, MAX_LOAD).toString()  
 						)
 						answer("resetStiva", "esitoResetStiva", "esitoResetStiva(0)"   )  
 						//genTimer( actor, state )
