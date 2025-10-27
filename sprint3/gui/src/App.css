@@ -1,0 +1,176 @@
+/* === GLOBAL === */
+body {
+  margin: 0;
+  background-color: #1b1b2f;
+  color: #eaeaea;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
+/* === MAIN CONTAINER === */
+.main-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 60px;               /* distanza orizzontale tra le 3 aree */
+  margin-top: 60px;
+  padding-bottom: 60px;
+}
+
+/* Tutti i pannelli partono dallo stesso livello verticale */
+.left-sidebar,
+.box,
+.side-panel {
+  align-self: flex-start;
+}
+
+/* === BOX CENTRALE (STATO STIVA) === */
+.box {
+  background: #252542;
+  padding: 30px 40px;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  width: 420px;
+  transition: all 0.3s ease;
+}
+
+/* Titolo */
+.box p {
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 25px;
+  color: #ffffff;
+  border-bottom: 2px solid #61dafb;
+  padding-bottom: 8px;
+}
+
+/* Griglia 2x2 per i primi 4 slot */
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 24px;
+  justify-items: center;
+  margin-bottom: 30px;
+}
+
+/* Slot 5 (centrato sotto la griglia) */
+.bottom-slot {
+  display: flex;
+  justify-content: center;
+}
+
+/* Animazione fade-in */
+.slot-grid > div,
+.bottom-slot > div {
+  opacity: 0;
+  animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsivo */
+@media (max-width: 500px) {
+  .main-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .box {
+    width: 90%;
+    padding: 20px;
+  }
+
+  .slot-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* === SIDE PANEL (DESTRO) === */
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px; /* Spazio tra WeightBar e StatsPanel */
+}
+
+/* === LEFT CONTROL PANEL === */
+.left-sidebar {
+  background-color: #1e2235;
+  border-radius: 16px;
+  padding: 20px;
+  color: #fff;
+  width: 280px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.left-sidebar h2 {
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+  color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.left-sidebar p {
+  font-size: 0.95rem;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.input-group {
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.input-group label {
+  color: #b0b0c0;
+  font-size: 0.9rem;
+}
+
+.input-field {
+  width: 100%;
+  padding: 8px;
+  background-color: #2b2f45;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.9rem;
+  margin-top: 6px;
+  outline: none;
+}
+
+.input-field:focus {
+  border: 1px solid #00e676;
+}
+
+/* Bottone invio */
+.send-btn {
+  margin-top: 12px;
+  width: 100%;
+  background-color: #00e676;
+  border: none;
+  color: #111;
+  border-radius: 8px;
+  padding: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.send-btn:hover {
+  background-color: #00c853;
+}

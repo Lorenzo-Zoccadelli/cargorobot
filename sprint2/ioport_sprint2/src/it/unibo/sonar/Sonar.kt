@@ -56,18 +56,14 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 				state("init") { //this:State
 					action { //it:State
 						CommUtils.outyellow("$name: STARTING...")
-						if(  DFREE_CALIBRATION_FLAG == 0  
-						 ){CommUtils.outyellow("$name: DFREE=${DFREE}")
-						}
-						subscribeToLocalActor("lettore_sonar_fisico") 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t00",targetState="waitMisurazioni",cond=whenEventGuarded("rilevazioneDistanza",{ DFREE_CALIBRATION_FLAG == 0  
+					 transition(edgeName="t013",targetState="waitMisurazioni",cond=whenEventGuarded("rilevazioneDistanza",{ DFREE_CALIBRATION_FLAG == 0  
 					}))
-					transition(edgeName="t01",targetState="calibrazione",cond=whenEventGuarded("rilevazioneDistanza",{ DFREE_CALIBRATION_FLAG == 1  
+					transition(edgeName="t014",targetState="calibrazione",cond=whenEventGuarded("rilevazioneDistanza",{ DFREE_CALIBRATION_FLAG == 1  
 					}))
 				}	 
 				state("calibrazione") { //this:State
@@ -95,8 +91,8 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t02",targetState="endCalibrazione",cond=whenDispatch("continue"))
-					transition(edgeName="t03",targetState="calibrazione",cond=whenEvent("rilevazioneDistanza"))
+					 transition(edgeName="t015",targetState="endCalibrazione",cond=whenDispatch("continue"))
+					transition(edgeName="t016",targetState="waitMisurazioni",cond=whenEvent("rilevazioneDistanza"))
 				}	 
 				state("endCalibrazione") { //this:State
 					action { //it:State
@@ -106,15 +102,14 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t04",targetState="waitMisurazioni",cond=whenEvent("rilevazioneDistanza"))
+					 transition(edgeName="t017",targetState="waitMisurazioni",cond=whenEvent("rilevazioneDistanza"))
 				}	 
 				state("waitMisurazioni") { //this:State
 					action { //it:State
 						if( checkMsgContent( Term.createTerm("rilevazioneDistanza(X)"), Term.createTerm("rilevazioneDistanza(X)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-												val D = payloadArg(0).toDouble()
-								CommUtils.outyellow("$name: ricevuto D=${D}")
+												D = payloadArg(0).toDouble()
 								if(  D <= DFREE/2  
 								 ){emitLocalStreamEvent("rilDistContainer", "rilDistContainer(1)" ) 
 								}
@@ -132,7 +127,7 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t05",targetState="waitMisurazioni",cond=whenEvent("rilevazioneDistanza"))
+					 transition(edgeName="t018",targetState="waitMisurazioni",cond=whenEvent("rilevazioneDistanza"))
 				}	 
 			}
 		}
