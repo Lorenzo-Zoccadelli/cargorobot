@@ -52,11 +52,83 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 				state("init") { //this:State
 					action { //it:State
 						CommUtils.outyellow("$name: STARTING...")
+						if(  DFREE_CALIBRATION_FLAG == 0  
+						 ){CommUtils.outyellow("$name: DFREE=${DFREE}")
+						}
+						subscribeToLocalActor("lettore_sonar_fisico") 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition(edgeName="t00",targetState="waitMisurazioni",cond=whenEventGuarded("rilevazioneDistanza",{ DFREE_CALIBRATION_FLAG == 0  
+					}))
+					transition(edgeName="t01",targetState="calibrazione",cond=whenEventGuarded("rilevazioneDistanza",{ DFREE_CALIBRATION_FLAG == 1  
+					}))
+				}	 
+				state("calibrazione") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("rilevazioneDistanza(X)"), Term.createTerm("rilevazioneDistanza(X)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								
+												val D = payloadArg(0).toDouble()
+								CommUtils.outyellow("$name: calibrazione in corso [${counterCalibrazione}/${TargetCounterCalibrazione}]...")
+								if(  counterCalibrazione < TargetCounterCalibrazione  
+								 ){
+													if(D > DFREE){
+														DFREE = D
+													}
+													counterCalibrazione += 1
+								}
+								else
+								 {
+								 					//DFREE = DFREE/TargetCounterCalibrazione
+								 forward("continue", "continue(1)" ,name ) 
+								 }
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t02",targetState="endCalibrazione",cond=whenDispatch("continue"))
+					transition(edgeName="t03",targetState="calibrazione",cond=whenEvent("rilevazioneDistanza"))
+				}	 
+				state("endCalibrazione") { //this:State
+					action { //it:State
+						CommUtils.outyellow("$name: calibrazione terminata, DFREE=${DFREE}")
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t04",targetState="waitMisurazioni",cond=whenEvent("rilevazioneDistanza"))
+				}	 
+				state("waitMisurazioni") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("rilevazioneDistanza(X)"), Term.createTerm("rilevazioneDistanza(X)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								
+												val D = payloadArg(0).toDouble()
+								CommUtils.outyellow("$name: ricevuto D=${D}")
+								if(  D <= DFREE/2  
+								 ){emitLocalStreamEvent("rilDistContainer", "rilDistContainer(1)" ) 
+								}
+								else
+								 {if(  D > DFREE  
+								  ){emitLocalStreamEvent("rilDistAnomalia", "rilDistAnomalia(1)" ) 
+								 }
+								 else
+								  {emitLocalStreamEvent("rilDistVuoto", "rilDistVuoto(1)" ) 
+								  }
+								 }
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t05",targetState="waitMisurazioni",cond=whenEvent("rilevazioneDistanza"))
 				}	 
 			}
 		}

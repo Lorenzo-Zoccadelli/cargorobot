@@ -26,14 +26,20 @@ with Diagram('ioportArch', show=False, outformat='png', graph_attr=graphattr) as
      sys = Custom('','./qakicons/system.png')
 ### see https://renenyffenegger.ch/notes/tools/Graphviz/attributes/label/HTML-like/index
      with Cluster('ctx_ioport', graph_attr=nodeattr):
-          ioport=Custom('ioport','./qakicons/symActorWithobjSmall.png')
+          lettore_sonar_fisico=Custom('lettore_sonar_fisico','./qakicons/symActorWithobjSmall.png')
           sonar=Custom('sonar','./qakicons/symActorWithobjSmall.png')
+          ioport=Custom('ioport','./qakicons/symActorWithobjSmall.png')
           led=Custom('led','./qakicons/symActorWithobjSmall.png')
+     lettore_sonar_fisico >> Edge( label='rilevazioneDistanza', **eventedgeattr, decorate='true', fontcolor='red') >> sonar
+     sonar >> Edge( label='rilDistContainer', **eventedgeattr, decorate='true', fontcolor='red') >> ioport
+     sonar >> Edge( label='rilDistAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> ioport
+     sonar >> Edge( label='rilDistVuoto', **eventedgeattr, decorate='true', fontcolor='red') >> ioport
      sys >> Edge( label='rilDistContainer', **evattr, decorate='true', fontcolor='darkgreen') >> ioport
      sys >> Edge( label='rilDistAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> ioport
      ioport >> Edge( label='containerRilevato', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      ioport >> Edge( label='rilevazioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      sys >> Edge( label='rilDistFineAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> ioport
      ioport >> Edge( label='risoluzioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
-     ioport >> Edge(color='blue', style='solid',  decorate='true', label='<accesioneLed &nbsp; spegnimentoLed &nbsp; >',  fontcolor='blue') >> led
+     sys >> Edge( label='rilevazioneAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> led
+     sys >> Edge( label='risoluzioneAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> led
 diag

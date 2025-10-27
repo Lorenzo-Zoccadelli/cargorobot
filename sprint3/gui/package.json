@@ -18,6 +18,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "proxy": "http://guibackend:9094",
   "eslintConfig": {
     "extends": [
       "react-app",

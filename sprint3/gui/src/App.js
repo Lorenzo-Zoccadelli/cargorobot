@@ -7,8 +7,10 @@ import WeightBar from './WeightBar';
 import StatsPanel from "./StatsPanel";
 
 
-const url = "ws://192.168.1.12:9094/ws/stiva";
-// la porta è la 9094
+const url =          "ws://guibackend:9094/ws/stiva";
+const apiPathCarico = "/api/cargoservice/richiesta-carico";
+
+
 
 class App extends React.Component{
   constructor(props){
@@ -16,7 +18,8 @@ class App extends React.Component{
     this.state = {
       tot_slots: 5,
       occupied: [],
-      newProductId: ""
+      newProductId: "",
+      maxLoad:0
     }
     this.onUpdate = this.onUpdate.bind(this);
     this.handleSendRequest = this.handleSendRequest.bind(this);
@@ -24,15 +27,27 @@ class App extends React.Component{
 
   componentDidMount() {
     const ws = new WebSocket(url);
-    ws.onopen = () => {console.log("websocket connection has been opened");}
-    ws.onclose = () => {console.log("websocket connection has been closed");}
-    ws.onerror = (error) => {console.log("error has occured" + error);}
+    this.ws = ws;
+
+    ws.onopen = () => {console.log("websocket connection has been opened");
+                        this.setState({ connected: true });
+    }
+    ws.onclose = () => {console.log("websocket connection has been closed");
+                         this.setState({ connected: false });
+    }
+    ws.onerror = (error) => {console.log("error has occured" + error);
+                            this.setState({ connected: true });
+    }
     ws.onmessage = (event) => {
 
-      const bigOne = JSON.parse(event.data);
-      console.log("Received:", bigOne);
+      const data = JSON.parse(event.data);
+      console.log("Received:", data);
       
-      this.onUpdate(bigOne)
+      const slotMap = data.slotMap;
+      const maxLoad = data.maxLoad;
+
+      this.setState({ maxLoad: maxLoad });
+      this.onUpdate(slotMap);
     }
   }
 
@@ -40,7 +55,7 @@ class App extends React.Component{
 
   onUpdate(slotMap) {
     const updated = [];
-
+    
     for(let i = 1; i<this.state.tot_slots; i++){
       let slotName = "Slot"+i
       if(slotMap[slotName]){
@@ -68,26 +83,42 @@ class App extends React.Component{
   }
 
   handleSendRequest() {
-    const { newProductId, connected } = this.state;
-    if (!connected) {
-      alert("Connessione WebSocket non attiva!");
-      return;
-    }
-    if (newProductId.trim() === "") {
-      alert("Inserisci un ID prodotto valido!");
-      return;
-    }
+  const { newProductId } = this.state;
 
-    const message = {
-      command: "richiestaCarico",
-      productId: parseInt(newProductId)
-    };
-
-    this.ws.send(JSON.stringify(message));
-    console.log("Sent:", message);
-
-    this.setState({ newProductId: "" });
+  if (newProductId.trim() === "") {
+    alert("⚠️ Inserisci un ID prodotto valido!");
+    return;
   }
+
+  fetch(apiPathCarico, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ productId: parseInt(newProductId) }),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Errore nella richiesta REST");
+      }
+      return response.json().catch(() => ({})); // gestisce risposte vuote o non-JSON
+    })
+    .then((data) => {
+      console.log("✅ Risposta server:", data);
+      if(data.tipoRisposta == 'richiestaCaricoAccettata'){
+        alert("✅ Richiesta di carico accettata!");
+      
+      }
+      else if(data.tipoRisposta == 'richiestaCaricoRifiutata'){
+        alert("❌ Richiesta di carico rifiutata: "+ data.messaggio);
+      }
+      this.setState({ newProductId: "" });
+    })
+    .catch((error) => {
+      console.error("❌ Errore REST:", error);
+      alert("❌ Errore durante l'invio della richiesta al server");
+    });
+}
   //------------------------------------------------------
 
 
@@ -161,7 +192,7 @@ render() {
         <div className="side-panel">
           <WeightBar
             totalWeight={occupied.reduce((acc, s) => acc + (s.weight || 0), 0)}
-            maxWeight={100}
+            maxWeight={this.state.maxLoad}
           />
 
           <StatsPanel

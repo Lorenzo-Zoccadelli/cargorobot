@@ -20,7 +20,6 @@ import org.json.simple.JSONObject
 
 //User imports JAN2024
 import main.java.model.*
-import java.io.IOException
 
 class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -32,19 +31,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-				val MAX_LOAD = System.getenv("MAX_LOAD").toIntOrNull() ?: -1
-				if(MAX_LOAD<=0){
-					System.out.println("La variabile d'ambinete MAX_LOAD non è settata correttamente o è un numero <=0")
-					System.exit(1)
-				}
-				
-				var slotMap: SlotMap? = null
-				try{
-					slotMap = CargoSlotMap("slotmap-conf.json")
-				}
-				catch(e: IOException){
-					System.exit(1)
-				}
+				val MAX_LOAD = 100.0
+				var slotMap: SlotMap = CargoSlotMap()
 				var currentProduct: Product? = null
 				var currentSlot: Slot? = null
 		return { //this:ActionBasciFsm
@@ -97,7 +85,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 								if(  currentProduct!!.getProductId() <= 0  
 								 ){CommUtils.outred("$name: il prodotto richiesto non esiste")
 								 val Esito = "'Prodotto non esistente'" 
-								answer("richiestaCarico", "richiestaCaricoRifiutata", "richiestaCaricoRifiutata($Esito)"   )  
+								answer("richiestaCarico", "richiestaCaricoAccettata", "richiestaCaricoAccettata($Esito)"   )  
 								forward("endLocal", "endLocal(0)" ,name ) 
 								}
 						}
@@ -115,23 +103,23 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				state("assegnamentoSlot") { //this:State
 					action { //it:State
 						CommUtils.outred("$name: recuperati i dati del prodotto")
-						if(  !slotMap!!.isAnySlotEmpty()  
+						if(  !slotMap.isAnySlotEmpty()  
 						 ){CommUtils.outred("$name: richiesta rifiutata, nessuno slot disponibile")
 						 val Esito = "'Nessuno slot disponibile'" 
-						answer("richiestaCarico", "richiestaCaricoRifiutata", "richiestaCaricoRifiutata($Esito)"   )  
+						answer("richiestaCarico", "richiestaCaricoAccettata", "richiestaCaricoAccettata($Esito)"   )  
 						forward("endLocal", "endLocal(0)" ,name ) 
 						}
 						else
-						 {if(  slotMap!!.getTotalWeight() + currentProduct!!.getWeight() > MAX_LOAD  
+						 {if(  slotMap.getTotalWeight() + currentProduct!!.getWeight() > MAX_LOAD  
 						  ){CommUtils.outred("$name: richiesta rifiutata, peso eccessivo")
 						  val Esito = "'Il prodotto eccede il peso massimo della stiva'" 
-						 answer("richiestaCarico", "richiestaCaricoRifiutata", "richiestaCaricoRifiutata($Esito)"   )  
+						 answer("richiestaCarico", "richiestaCaricoAccettata", "richiestaCaricoAccettata($Esito)"   )  
 						 forward("endLocal", "endLocal(0)" ,name ) 
 						 }
 						 else
 						  { 
-						  					currentSlot = slotMap!!.getFirstEmptySlot()
-						  					slotMap!!.putProductIntoSlot(currentSlot, currentProduct)
+						  					currentSlot = slotMap.getFirstEmptySlot()
+						  					slotMap.putProductIntoSlot(currentSlot, currentProduct)
 						  					val Esito = "'OK'"
 						  CommUtils.outred("$name: prodotto assegnato allo slot $currentSlot")
 						  answer("richiestaCarico", "richiestaCaricoAccettata", "richiestaCaricoAccettata($Esito)"   )  
@@ -159,7 +147,6 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					sysaction { //it:State
 					}	 	 
 					 transition(edgeName="t011",targetState="caricaProdotto",cond=whenEvent("containerRilevato"))
-					interrupthandle(edgeName="t012",targetState="handleAnomalia",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("caricaProdotto") { //this:State
 					action { //it:State
@@ -173,9 +160,9 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t013",targetState="caricamentoTerminato",cond=whenReply("slotCaricato"))
-					transition(edgeName="t014",targetState="problemaCaricamento",cond=whenReply("caricamentoFallito"))
-					interrupthandle(edgeName="t015",targetState="handleAnomalia",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
+					 transition(edgeName="t012",targetState="caricamentoTerminato",cond=whenReply("slotCaricato"))
+					transition(edgeName="t013",targetState="problemaCaricamento",cond=whenReply("caricamentoFallito"))
+					interrupthandle(edgeName="t014",targetState="handleAnomalia",cond=whenEvent("rilevazioneAnomalia"),interruptedStateTransitions)
 				}	 
 				state("caricamentoTerminato") { //this:State
 					action { //it:State
@@ -205,7 +192,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t016",targetState="resumeFromAnomalia",cond=whenEvent("risoluzioneAnomalia"))
+					 transition(edgeName="t015",targetState="resumeFromAnomalia",cond=whenEvent("risoluzioneAnomalia"))
 				}	 
 				state("resumeFromAnomalia") { //this:State
 					action { //it:State
