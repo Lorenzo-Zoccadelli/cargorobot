@@ -1,0 +1,68 @@
+/* Slot.css */
+
+button {
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  width: 150px;
+  min-height: 70px;
+  padding: 10px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: default;
+  transition: all 0.25s ease;
+  white-space: pre-line; /* permette i \n nel testo */
+  
+}
+
+/* OCCUPATO */
+.occupied {
+  background: linear-gradient(135deg, #e76f51, #f4a261);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(231, 111, 81, 0.4);
+}
+
+/* LIBERO */
+.free {
+  background: linear-gradient(135deg, #06d6a0, #1b9aaa);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(27, 154, 170, 0.4);
+}
+
+/* NON DISPONIBILE */
+.unavailable {
+  background: linear-gradient(135deg, #e63946, #9b2226);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(230, 57, 70, 0.5);
+}
+
+/* Etichetta sopra ogni slot */
+label {
+  font-size: 0.85rem;
+  color: #b5b5c4;
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Effetto hover per feedback visivo */
+button:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+
+/* Effetto lampeggio temporaneo */
+.flash {
+  animation: flash 0.8s ease-in-out;
+}
+
+@keyframes flash {
+  0% { filter: brightness(1.8); }
+  100% { filter: brightness(1); }
+}

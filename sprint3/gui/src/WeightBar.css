@@ -1,0 +1,55 @@
+.weight-bar-container {
+  background-color: #1e2235;
+  border-radius: 20px;
+  padding: 20px;
+  color: #fff;
+  width: 280px;
+  height: fit-content;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.weight-bar-container h3 {
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.bar-outer {
+  width: 100%;
+  height: 25px;
+  background-color: #2b2f45;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.bar-inner {
+  height: 100%;
+  border-radius: 12px;
+  transition: width 0.5s ease, background-color 0.4s ease;
+}
+
+.weight-text {
+  font-size: 0.9rem;
+  color: #b5b5c4;
+}
+
+.warning-text {
+  margin-top: 10px;
+  color: #ef5350;
+  font-weight: bold;
+  animation: blink 1s infinite alternate;
+}
+
+@keyframes blink {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
