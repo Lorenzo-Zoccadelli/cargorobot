@@ -133,6 +133,9 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 					sysaction { //it:State
 					}	 	
 					 transition(edgeName="t02",targetState="fineAnomalia",cond=whenEvent("rilDistFineAnomalia"))
+
+					}	 	 
+					 transition(edgeName="t018",targetState="fineAnomalia",cond=whenEvent("rilDistVuoto"))
 				}	 
 				state("fineAnomalia") { //this:State
 					action { //it:State
