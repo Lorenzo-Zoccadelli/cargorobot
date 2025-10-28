@@ -73,6 +73,7 @@ QActor lettore_sonar_fisico context ctx_ioport{
 			
 			if(line == null){
 				System.out.println("Problema rilevamento distanza")
+				println(line)
 				System.exit(1)
 			}
 			

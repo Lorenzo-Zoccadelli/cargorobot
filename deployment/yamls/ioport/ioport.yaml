@@ -22,9 +22,9 @@ services:
       - LED_OFF_SCRIPT_PATH=/resources/python/ledPython25Off.py
       - LED_ON_SCRIPT_PATH=/resources/python/ledPython25On.py
     volumes:
-      - ./ledPython25On.py:/home/zocca/iss/python/ledPython25On.py
-      - ./ledPython25Off.py:/home/zocca/iss/python/ledPython25Off.py
-      - ./sonar.py:/home/zocca/iss/python/sonar.py
+      - ./ledPython25On.py:/resources/python/ledPython25On.py
+      - ./ledPython25Off.py:/resources/python/ledPython25Off.py
+      - ./sonar.py:/resources/python/sonar.py
 
 networks:
   iss-network:

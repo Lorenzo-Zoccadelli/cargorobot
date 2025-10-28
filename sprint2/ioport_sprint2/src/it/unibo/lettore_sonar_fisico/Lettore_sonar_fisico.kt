@@ -71,6 +71,7 @@ class Lettore_sonar_fisico ( name: String, scope: CoroutineScope, isconfined: Bo
 									
 									if(line == null){
 										System.out.println("Problema rilevamento distanza")
+										println(line)
 										System.exit(1)
 									}
 									
