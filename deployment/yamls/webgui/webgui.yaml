@@ -9,6 +9,13 @@ services:
     networks:
       - iss-network
     
+  webgui-frontend:
+    container_name: webgui-frontend
+    image: webgui-frontend:1.0
+    ports:
+      - 3000:3000/tcp
+    networks:
+      - iss-network
 networks:
   iss-network:
     external: true

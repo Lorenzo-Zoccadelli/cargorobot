@@ -61,6 +61,7 @@ with Diagram('systemArch', show=False, outformat='png', graph_attr=graphattr) as
      client_esterno >> Edge(color='magenta', style='solid', decorate='true', label='<createProduct<font color="darkgreen"> createdProduct</font> &nbsp; >',  fontcolor='magenta') >> productservice
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<getProduct<font color="darkgreen"> getProductAnswer</font> &nbsp; >',  fontcolor='magenta') >> productservice
      client_esterno >> Edge(color='magenta', style='solid', decorate='true', label='<richiestaCaricamentoSlot<font color="darkgreen"> slotCaricato caricamentoFallito slotCaricato caricamentoFallito</font> &nbsp; >',  fontcolor='magenta') >> cargoservice
+     webgui >> Edge(color='magenta', style='solid', decorate='true', label='<richiestaCaricamentoSlot<font color="darkgreen"> slotCaricato caricamentoFallito slotCaricato caricamentoFallito</font> &nbsp; >',  fontcolor='magenta') >> cargoservice
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<richiestaCaricamentoSlot<font color="darkgreen"> slotCaricato caricamentoFallito slotCaricato caricamentoFallito</font> &nbsp; >',  fontcolor='magenta') >> cargorobot
      cargoservice >> Edge(color='blue', style='solid',  decorate='true', label='<statoStiva &nbsp; >',  fontcolor='blue') >> webgui
      cargorobot >> Edge(color='blue', style='solid',  decorate='true', label='<setplanbuildelay &nbsp; >',  fontcolor='blue') >> basicrobot

@@ -1,0 +1,9 @@
+{
+	"slotMap":{
+		"Slot1": {"productId": 1, "name": "prod1", "weight": 20},
+		"Slot2": {"productId": 2, "name": "prod2", "weight": 15},
+		"Slot3": null,
+		"Slot4": null
+	},
+	"maxLoad": 100
+}

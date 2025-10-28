@@ -892,9 +892,13 @@ QActor led context ctx_ioport{
 QActor webgui context ctx_webgui{
 	State init initial{
 		observeResource cargoservice msgid statoStiva
+		request cargoservice -m richiestaCaricamentoSlot : richiestaCaricamentoSlot(1)
+	
 	}
 	Transition t0
 	 whenMsg statoStiva -> init
+		whenReply richiestaCaricoAccettata -> init
+		whenReply richiestaCaricoRifiutata -> init
 }
 
 QActor client_esterno context ctx_client{

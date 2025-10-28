@@ -33,12 +33,15 @@ class Webgui ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 				state("init") { //this:State
 					action { //it:State
 						observeResource("client","9091","ctx_cargoservice","cargoservice","statoStiva")
+						request("richiestaCaricamentoSlot", "richiestaCaricamentoSlot(1)" ,"cargoservice" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
 					 transition(edgeName="t064",targetState="init",cond=whenDispatch("statoStiva"))
+					transition(edgeName="t065",targetState="init",cond=whenReply("richiestaCaricoAccettata"))
+					transition(edgeName="t066",targetState="init",cond=whenReply("richiestaCaricoRifiutata"))
 				}	 
 			}
 		}

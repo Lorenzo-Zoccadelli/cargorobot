@@ -39,8 +39,8 @@ class Client_esterno ( name: String, scope: CoroutineScope, isconfined: Boolean=
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t065",targetState="init",cond=whenReply("richiestaCaricoAccettata"))
-					transition(edgeName="t066",targetState="init",cond=whenReply("richiestaCaricoRifiutata"))
+					 transition(edgeName="t067",targetState="init",cond=whenReply("richiestaCaricoAccettata"))
+					transition(edgeName="t068",targetState="init",cond=whenReply("richiestaCaricoRifiutata"))
 				}	 
 			}
 		}
