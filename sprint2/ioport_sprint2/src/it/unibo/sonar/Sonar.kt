@@ -19,7 +19,7 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
-import java.io.*
+import main.java.utils.*
 
 class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -31,23 +31,27 @@ class Sonar ( name: String, scope: CoroutineScope, isconfined: Boolean=false, is
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-				val PYTHON_CMD = System.getenv("PYTHON_CMD") ?: ""
-				if(PYTHON_CMD.equals("")){
-					System.out.println("La variabile d'ambiente PYTHON_CMD non è impostata")
+				
+				val DFREE_CALIBRATION_FLAG = ProcessUtils.getIntEnvVar("DFREE_CALIBRATION_FLAG").orElse(0)
+				var DFREE = -1.0
+				if(DFREE_CALIBRATION_FLAG == 0){
+					DFREE = ProcessUtils.getDoubleEnvVar("DFREE").orElse(-1.0)
+					if(DFREE<0.0){
+						println("Variabile d'ambiente DFREE non presente o errata")
+						System.exit(1)
+					}
+				}
+				
+				val SONAR_MIS_PER_SEC=ProcessUtils.getIntEnvVar("SONAR_MIS_PER_SEC").orElse(-1)
+		
+				if(SONAR_MIS_PER_SEC<0){
+					println("Variabile d'ambiente SONAR_MIS_PER_SEC non presente o errata")
 					System.exit(1)
 				}
 				
-				val SONAR_SCRIPT_PATH = System.getenv("LED_ON_SCRIPT_PATH") ?: ""
-				if(SONAR_SCRIPT_PATH.equals("")){
-					System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH non è impostata")
-					System.exit(1)
-				}
+				val TargetCounterCalibrazione = SONAR_MIS_PER_SEC * 10
 				
-				if(!File(SONAR_SCRIPT_PATH).isFile()){
-					System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH contiene un percorso inesistente")
-					System.exit(1)
-				}
-				
+				var counterCalibrazione = 0
 		return { //this:ActionBasciFsm
 				state("init") { //this:State
 					action { //it:State

@@ -25,6 +25,10 @@ with Diagram('ioportArch', show=False, outformat='png', graph_attr=graphattr) as
   with Cluster('env'):
      sys = Custom('','./qakicons/system.png')
 ### see https://renenyffenegger.ch/notes/tools/Graphviz/attributes/label/HTML-like/index
+     with Cluster('ctx_cargoservice', graph_attr=nodeattr):
+          cargoservice=Custom('cargoservice(ext)','./qakicons/externalQActor.png')
+     with Cluster('ctx_cargorobot', graph_attr=nodeattr):
+          corgorobot=Custom('corgorobot(ext)','./qakicons/externalQActor.png')
      with Cluster('ctx_ioport', graph_attr=nodeattr):
           lettore_sonar_fisico=Custom('lettore_sonar_fisico','./qakicons/symActorWithobjSmall.png')
           sonar=Custom('sonar','./qakicons/symActorWithobjSmall.png')
@@ -38,7 +42,6 @@ with Diagram('ioportArch', show=False, outformat='png', graph_attr=graphattr) as
      sys >> Edge( label='rilDistAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> ioport
      ioport >> Edge( label='containerRilevato', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      ioport >> Edge( label='rilevazioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
-     sys >> Edge( label='rilDistFineAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> ioport
      ioport >> Edge( label='risoluzioneAnomalia', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      sys >> Edge( label='rilevazioneAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> led
      sys >> Edge( label='risoluzioneAnomalia', **evattr, decorate='true', fontcolor='darkgreen') >> led

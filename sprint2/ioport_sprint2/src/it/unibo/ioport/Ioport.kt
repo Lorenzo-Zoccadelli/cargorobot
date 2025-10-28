@@ -19,6 +19,7 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
+import main.java.utils.*
 
 class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -29,6 +30,23 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		 
+				var contatore = 0 
+			
+				
+				val RIL_CONTAINER_SECS=ProcessUtils.getIntEnvVar("RIL_CONTAINER_SECS").orElse(3)
+				val RIL_ANOMALIA_SECS=ProcessUtils.getIntEnvVar("RIL_ANOMALIA_SECS").orElse(3)
+				val SONAR_MIS_PER_SEC=ProcessUtils.getIntEnvVar("SONAR_MIS_PER_SEC").orElse(-1)
+		
+				if(SONAR_MIS_PER_SEC<0){
+					println("Variabile d'ambiente SONAR_MIS_PER_SEC non presente o errata")
+					System.exit(1)
+				}
+				
+				val ContainerCounterTarget = SONAR_MIS_PER_SEC * RIL_CONTAINER_SECS
+				val AnomaliaTargetCounter = SONAR_MIS_PER_SEC * RIL_ANOMALIA_SECS
+				
+			
 		return { //this:ActionBasciFsm
 				state("init") { //this:State
 					action { //it:State
@@ -43,7 +61,7 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 					}	 	 
 					 transition( edgeName="goto",targetState="ioportVuota", cond=doswitch() )
 				}	 
-				state("waitEvents") { //this:State
+				state("ioportVuota") { //this:State
 					action { //it:State
 						CommUtils.outyellow("$name: ioport vuota...")
 						//genTimer( actor, state )
@@ -51,7 +69,6 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-
 					 transition(edgeName="t06",targetState="resetPerContainer",cond=whenEvent("rilDistContainer"))
 					transition(edgeName="t07",targetState="resetPerAnomalia",cond=whenEvent("rilDistAnomalia"))
 				}	 
@@ -91,7 +108,6 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-
 					 transition(edgeName="t012",targetState="resetPerAnomalia",cond=whenEvent("rilDistAnomalia"))
 					transition(edgeName="t013",targetState="ioportVuota",cond=whenEvent("rilDistVuoto"))
 				}	 
@@ -125,28 +141,25 @@ class Ioport ( name: String, scope: CoroutineScope, isconfined: Boolean=false, i
 				}	 
 				state("anomalia") { //this:State
 					action { //it:State
-						emit("rilevazioneAnomalia", "rilevazioneAnomalia(1)" ) 
-						forward("accesioneLed", "accesioneLed(1)" ,"led" ) 
+						CommUtils.outyellow("$name: anomalia in corso")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
-					}	 	
-					 transition(edgeName="t02",targetState="fineAnomalia",cond=whenEvent("rilDistFineAnomalia"))
-
 					}	 	 
 					 transition(edgeName="t018",targetState="fineAnomalia",cond=whenEvent("rilDistVuoto"))
 				}	 
 				state("fineAnomalia") { //this:State
 					action { //it:State
+						CommUtils.outyellow("$name: fine anomalia")
 						emit("risoluzioneAnomalia", "risoluzioneAnomalia(1)" ) 
-						forward("spegnimentoLed", "spegnimentoLed(1)" ,"led" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition( edgeName="goto",targetState="ioportVuota", cond=doswitch() )
 				}	 
 			}
-		
+		}
 } 

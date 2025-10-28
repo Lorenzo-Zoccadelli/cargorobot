@@ -5,7 +5,7 @@ Event		rilevazioneDistanza		:	rilevazioneDistanza(X)
 Event		rilDistContainer		:	rilDistContainer(X)
 Event		rilDistAnomalia			:	rilDistAnomalia(X)
 Event		rilDistVuoto			:	rilDistFineAnomalia(X)
-  
+   
 ///////////////////
 //MALFUNZIONAMENTO
 ///////////////////
