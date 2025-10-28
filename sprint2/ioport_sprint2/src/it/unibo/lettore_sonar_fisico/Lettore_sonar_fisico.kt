@@ -19,7 +19,6 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
-import java.io.*
 import main.java.utils.*
 
 class Lettore_sonar_fisico ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
@@ -32,25 +31,26 @@ class Lettore_sonar_fisico ( name: String, scope: CoroutineScope, isconfined: Bo
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-				val PYTHON_CMD = System.getenv("PYTHON_CMD") ?: ""
+				
+				val PYTHON_CMD = ProcessUtils.getStringEnvVar("PYTHON_CMD").orElse("")
 				if(PYTHON_CMD.equals("")){
 					System.out.println("La variabile d'ambiente PYTHON_CMD non è impostata")
 					System.exit(1)
 				}
 				
-				val SONAR_SCRIPT_PATH = System.getenv("SONAR_SCRIPT_PATH") ?: ""
+				val SONAR_SCRIPT_PATH = ProcessUtils.getStringEnvVar("SONAR_SCRIPT_PATH").orElse("")
 				if(SONAR_SCRIPT_PATH.equals("")){
 					System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH non è impostata")
 					System.exit(1)
 				}
 				
-				if(!File(SONAR_SCRIPT_PATH).isFile()){
+				if(!java.io.File(SONAR_SCRIPT_PATH).isFile()){
 					System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH contiene un percorso inesistente")
 					System.exit(1)
 				}
 				
 				val process = Runtime.getRuntime().exec(PYTHON_CMD + " -u " + SONAR_SCRIPT_PATH) 
-		    	val reader = BufferedReader(InputStreamReader(process.inputStream))
+		    	val reader = java.io.BufferedReader(java.io.InputStreamReader(process.inputStream))
 		    	
 		    	
 		return { //this:ActionBasciFsm
@@ -81,6 +81,7 @@ class Lettore_sonar_fisico ( name: String, scope: CoroutineScope, isconfined: Bo
 										System.exit(1)
 									}
 									
+						delay(1000) 
 						emitLocalStreamEvent("rilevazioneDistanza", "rilevazioneDistanza($D)" ) 
 						//genTimer( actor, state )
 					}

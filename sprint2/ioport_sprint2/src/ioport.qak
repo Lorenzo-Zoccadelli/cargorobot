@@ -30,34 +30,36 @@ ExternalQActor corgorobot context ctx_cargorobot
 
 
 QActor lettore_sonar_fisico context ctx_ioport{
-	import "java.io.*"
 	import "main.java.utils.*"
 	
-	
+	 
 	[#
-		val PYTHON_CMD = System.getenv("PYTHON_CMD") ?: ""
+		
+		val PYTHON_CMD = ProcessUtils.getStringEnvVar("PYTHON_CMD").orElse("")
 		if(PYTHON_CMD.equals("")){
 			System.out.println("La variabile d'ambiente PYTHON_CMD non è impostata")
 			System.exit(1)
 		}
 		
-		val SONAR_SCRIPT_PATH = System.getenv("SONAR_SCRIPT_PATH") ?: ""
+		val SONAR_SCRIPT_PATH = ProcessUtils.getStringEnvVar("SONAR_SCRIPT_PATH").orElse("")
 		if(SONAR_SCRIPT_PATH.equals("")){
 			System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH non è impostata")
 			System.exit(1)
 		}
 		
-		if(!File(SONAR_SCRIPT_PATH).isFile()){
+		if(!java.io.File(SONAR_SCRIPT_PATH).isFile()){
 			System.out.println("La variabile d'ambiente SONAR_SCRIPT_PATH contiene un percorso inesistente")
 			System.exit(1)
 		}
 		
 		val process = Runtime.getRuntime().exec(PYTHON_CMD + " -u " + SONAR_SCRIPT_PATH) 
-    	val reader = BufferedReader(InputStreamReader(process.inputStream))
+    	val reader = java.io.BufferedReader(java.io.InputStreamReader(process.inputStream))
     	
     	
 	#]
+	
 	 
+	
 	State init initial{
 		println("$name: STARTING...") color yellow
 		
@@ -65,6 +67,7 @@ QActor lettore_sonar_fisico context ctx_ioport{
 	Goto working
 	
 	State working{
+		
 		[#
 			val line = reader.readLine()
 			
@@ -82,7 +85,9 @@ QActor lettore_sonar_fisico context ctx_ioport{
 			
 		#]
 		
+		
 		//println("$name: D=${D}") color yellow
+		delay 1000
 		
 		emitlocalstream rilevazioneDistanza : rilevazioneDistanza($D)
 	}

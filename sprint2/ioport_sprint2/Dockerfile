@@ -1,4 +1,8 @@
 FROM eclipse-temurin:17.0.5_8-jre-focal as builder
+
+RUN apt-get update -y
+## RUN apt-get install -y wiringpi
+RUN apt-get install -y python3
 ## EXPOSE 8720
 ## ADD extracts the tar
 ADD ./build/distributions/ioport-1.0.tar /
@@ -9,8 +13,8 @@ COPY ./*.json ./
 COPY ./*.bin ./
 COPY ./*.txt ./
 
-## RUN apt-get update -y
-## RUN apt-get install -y wiringpi
-## RUN sudo apt-get install -y python
+
+
+
 
 CMD ["bash", "ioport"]
