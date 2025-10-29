@@ -44,6 +44,7 @@ Gruppo di lavoro:
 \
 [Directory progetto cargoservice (sprint 3)](https://github.com/Lorenzo-Zoccadelli/cargorobot/tree/main/sprint3/cargoservice_sprint3)
 \
-[Documentazione sprint 3](https://github.com/Lorenzo-Zoccadelli/cargorobot/tree/main/sprint3/sprint3_v1.pdf)
+[Documentazione sprint 3](https://github.com/Lorenzo-Zoccadelli/cargorobot/tree/main/sprint3/sprint3_v0.pdf)
+
 
 
