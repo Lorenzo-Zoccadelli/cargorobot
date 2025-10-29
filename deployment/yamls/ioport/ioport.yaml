@@ -6,9 +6,12 @@ services:
     ports:
       - 9093:9093/tcp
       - 9093:9093/udp
+    privileged: true
+    devices:
+      - /dev/gpiomem:/dev/gpiomem
     extra_hosts:
-      - "cargoservice:192.168.1.192"
-      - "cargorobot:192.168.1.192"
+      - "cargoservice:10.167.46.141"
+      - "cargorobot:10.167.46.141"
     networks:
       - ext-net
     environment:
