@@ -89,7 +89,7 @@ QActor lettore_sonar_fisico context ctx_ioport{
 		
 		//println("$name: D=${D}") color yellow
 		delay 1000
-		
+		println(D) color cyan
 		emitlocalstream rilevazioneDistanza : rilevazioneDistanza($D)
 	}
 	Goto working

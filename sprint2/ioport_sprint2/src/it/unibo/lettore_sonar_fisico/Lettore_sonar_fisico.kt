@@ -83,6 +83,7 @@ class Lettore_sonar_fisico ( name: String, scope: CoroutineScope, isconfined: Bo
 									}
 									
 						delay(1000) 
+						CommUtils.outcyan(D)
 						emitLocalStreamEvent("rilevazioneDistanza", "rilevazioneDistanza($D)" ) 
 						//genTimer( actor, state )
 					}

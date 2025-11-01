@@ -1,7 +1,7 @@
 services:
 
-  guibackend:
-    container_name: guibackend
+  webgui-backend-alone:
+    container_name: webgui-backend-alone
     image: webgui-backend:1.0
     ports:
       - 9094:9094/tcp
@@ -9,13 +9,6 @@ services:
     networks:
       - iss-network
     
-  guifrontend:
-    container_name: guifrontend
-    image: webgui-frontend:1.0
-    ports:
-      - 3000:3000/tcp
-    networks:
-      - iss-network
 networks:
   iss-network:
     external: true
