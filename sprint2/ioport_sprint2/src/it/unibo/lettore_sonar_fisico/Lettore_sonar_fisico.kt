@@ -70,7 +70,7 @@ class Lettore_sonar_fisico ( name: String, scope: CoroutineScope, isconfined: Bo
 									val line = reader.readLine()
 									
 									if(line == null){
-										System.out.println("Problema rilevamento distanza")
+										System.out.println("Problema rilevamento distanza, line nulla")
 										println(line)
 										System.exit(1)
 									}
@@ -78,7 +78,9 @@ class Lettore_sonar_fisico ( name: String, scope: CoroutineScope, isconfined: Bo
 									val D = line.toDoubleOrNull() ?: -1.0
 									
 									if(D<0){
-										System.out.println("Problema rilevamento distanza")
+										System.out.println("Problema rilevamento distanza, distanza negativa")
+										System.out.println(D)	
+										System.out.println(line)
 										System.exit(1)
 									}
 									

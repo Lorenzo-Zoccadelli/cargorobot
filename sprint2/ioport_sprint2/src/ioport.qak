@@ -72,7 +72,7 @@ QActor lettore_sonar_fisico context ctx_ioport{
 			val line = reader.readLine()
 			
 			if(line == null){
-				System.out.println("Problema rilevamento distanza")
+				System.out.println("Problema rilevamento distanza, line nulla")
 				println(line)
 				System.exit(1)
 			}
@@ -80,7 +80,9 @@ QActor lettore_sonar_fisico context ctx_ioport{
 			val D = line.toDoubleOrNull() ?: -1.0
 			
 			if(D<0){
-				System.out.println("Problema rilevamento distanza")
+				System.out.println("Problema rilevamento distanza, distanza negativa")
+				System.out.println(D)	
+				System.out.println(line)
 				System.exit(1)
 			}
 			
