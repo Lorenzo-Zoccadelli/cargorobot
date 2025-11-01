@@ -79,7 +79,7 @@ class Lettore_sonar_fisico ( name: String, scope: CoroutineScope, isconfined: Bo
 									
 									if(D<0){
 										System.out.println("Problema rilevamento distanza, distanza negativa")
-										System.out.println(D)	
+										System.out.println("$D")	
 										System.out.println(line)
 										System.exit(1)
 									}
