@@ -1,6 +1,6 @@
 #!/bin/bash
 echo CARICAMENTO CONTAINER
-cd deployment/yamls/utils 
+cd yamls/utils 
 echo carico i servizi MONGODB e MOSQUITTO
 docker-compose -f utils.yaml up
 

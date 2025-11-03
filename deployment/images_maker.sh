@@ -2,7 +2,7 @@
 # creazione immagini cargorobot e cargoservice 
 echo CREAZIONI IMMAGINI DEL SISTEMA
 echo creazione immagine cargorobot
-cd sprint1/cargorobot_sprint1
+cd ../sprint1/cargorobot_sprint1
 pwd
 chmod +x gradlew
 ./gradlew distTar

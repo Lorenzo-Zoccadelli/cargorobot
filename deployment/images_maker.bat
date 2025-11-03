@@ -7,26 +7,26 @@ echo CREAZIONE IMMAGINI DEL SISTEMA
 
 REM === creazione immagine cargorobot ===
 echo Creazione immagine cargorobot
-cd sprint1\cargorobot_sprint1
-gradlew.bat distTar
+cd ..\sprint1\cargorobot_sprint1
+call gradlew.bat distTar
 docker build -t cargorobot:1.0 .
 
 REM === creazione immagine cargoservice ===
 echo Creazione immagine cargoservice
 cd ..\..\sprint3\cargoservice_sprint3
-gradlew.bat distTar
+call gradlew.bat distTar
 docker build -t cargoservice:1.0 .
 
 REM === creazione immagine ioport ===
 echo Creazione immagine ioport
 cd ..\..\sprint2\ioport_sprint2
-gradlew.bat distTar
+call gradlew.bat distTar
 docker build -t ioport:1.0 .
 
 REM === creazione immagine webgui ===
 echo Creazione immagini webgui
 cd ..\..\sprint3\cargogui_backend_sprint3
-gradlew.bat distTar
+call gradlew.bat distTar
 docker build -t webgui-backend:1.0 .
 
 cd ..\gui
